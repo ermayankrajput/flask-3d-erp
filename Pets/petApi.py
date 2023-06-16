@@ -87,6 +87,7 @@ def create_pet():
     # breakpoint()
     # return request.data
     file = request.files["u_file"]
+    print(file)
     uniqueFileName = str(datetime.now().timestamp()).replace(".","")
     fileNameSplit = file.filename.split(".")
     ext = fileNameSplit[len(fileNameSplit)-1]
@@ -103,3 +104,10 @@ def create_pet():
     db.session.commit()
     # breakpoint()
     return jsonify({"success": True,"response":"Pet added"})
+
+
+
+
+# @petApi_blueprint.route('/converted', methods = ['GET'])
+# def create_pet():
+#     return "this is new"

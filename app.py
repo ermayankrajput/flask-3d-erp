@@ -1,17 +1,21 @@
 from flask import Flask, abort,jsonify, request ,Blueprint
 from flask_sqlalchemy import SQLAlchemy
 import json
+import os
 # from streamlit import caching
 
 
 # import trimesh
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='transported')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:password@localhost/pets'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # caching.clear_cache()
 from Pets.petApi import petApi_blueprint
 app.register_blueprint(petApi_blueprint)
+
+from converted.conv import conv_blueprint
+app.register_blueprint(conv_blueprint)
 # from converters.converter import converter_blueprint
 # app.register_blueprint(converter_blueprint)
 # db = SQLAlchemy(app)
@@ -72,6 +76,9 @@ def add_header(r):
 def index():
     return jsonify({"message": "Welcome to my pet store"})
 
+@app.route('/transported/<path:filename>', methods=['GET', 'POST'])
+def responseTransportedFile(filename):
+    send_from_directory(app.static_folder, filename)
 
 
 # @app.route("/pets/<int:pet_id>", methods = ["DELETE"])
