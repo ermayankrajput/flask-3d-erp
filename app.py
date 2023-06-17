@@ -7,7 +7,9 @@ import os
 
 # import trimesh
 
-app = Flask(__name__, static_folder='transported')
+# app = Flask(__name__, static_folder='transported')
+app = Flask(__name__, static_folder='uploads')
+print(app.static_folder)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:password@localhost/pets'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # caching.clear_cache()
@@ -76,8 +78,13 @@ def add_header(r):
 def index():
     return jsonify({"message": "Welcome to my pet store"})
 
-@app.route('/transported/<path:filename>', methods=['GET', 'POST'])
+@app.route('/uploads/<path:filename>', methods=['GET', 'POST'])
 def responseTransportedFile(filename):
+    send_from_directory(app.static_folder, filename)
+
+
+@app.route('/uploads/<path:filename>', methods=['GET', 'POST'])
+def responseTransportedImgFile(filename):
     send_from_directory(app.static_folder, filename)
 
 

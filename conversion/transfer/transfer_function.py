@@ -59,26 +59,26 @@ def main_my(theSource = 'abc.stp'):
 
     aWriter = cadex.ModelData_ModelWriter()
     # Converting and writing the model to file
-    if not os.path.exists('transported'):
-        os.makedirs('transported')
+    if not os.path.exists('uploads/transported'):
+        os.makedirs('uploads/transported')
 
-    if not os.path.exists('transportedImg'):
-        os.makedirs('transportedImg')
+    if not os.path.exists('uploads/images'):
+        os.makedirs('uploads/images')
 
     # if not aWriter.Write(aModel, cadex.Base_UTF16String('transported/'+splitFileFirstName+'.stl')):
     #     print("Failed to convert and write the file to specified format ")
 
-    if not aWriter.Write(aModel, cadex.Base_UTF16String('transported/'+splitFileFirstName+'.stl')):
+    if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/transported/'+splitFileFirstName+'.stl')):
         print("Failed to convert and write the file to specified format ")
         return 1
 
-    if not aWriter.Write(aModel, cadex.Base_UTF16String('transportedImg/'+splitFileFirstName+'.jpg')):
+    if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/images/'+splitFileFirstName+'.jpg')):
         print("Failed to convert and write the file to specified format ")
         return 1    
 
     print("Completed")
-    var = 'transported/'+splitFileFirstName+'.stl' 
-    var1 =  'transportedImg/'+splitFileFirstName+'.jpg'
+    var = 'uploads/transported/'+splitFileFirstName+'.stl' 
+    var1 =  'uploads/images/'+splitFileFirstName+'.jpg'
     return var ,var1
 # breakpoint()
 
