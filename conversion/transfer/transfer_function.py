@@ -41,6 +41,8 @@ def main_my(theSource = 'abc.stp'):
     FileMainName = fileNameSplit[len(fileNameSplit)-1]
     splitFile = FileMainName.split(".")
     splitFileFirstName = splitFile[len(splitFile)-2]
+    # breakpoint()
+
     anAbsolutePathToRuntimeKey = os.path.abspath(os.path.dirname(Path(__file__).resolve()) + r"/runtime_key.lic")
     if not cadex.LicenseManager.CADExLicense_ActivateRuntimeKeyFromAbsolutePath(anAbsolutePathToRuntimeKey):
         print("Failed to activate CAD Exchanger license.")
@@ -59,12 +61,26 @@ def main_my(theSource = 'abc.stp'):
     # Converting and writing the model to file
     if not os.path.exists('transported'):
         os.makedirs('transported')
+
+    if not os.path.exists('transportedImg'):
+        os.makedirs('transportedImg')
+
+    # if not aWriter.Write(aModel, cadex.Base_UTF16String('transported/'+splitFileFirstName+'.stl')):
+    #     print("Failed to convert and write the file to specified format ")
+
     if not aWriter.Write(aModel, cadex.Base_UTF16String('transported/'+splitFileFirstName+'.stl')):
         print("Failed to convert and write the file to specified format ")
         return 1
 
+    if not aWriter.Write(aModel, cadex.Base_UTF16String('transportedImg/'+splitFileFirstName+'.jpg')):
+        print("Failed to convert and write the file to specified format ")
+        return 1    
+
     print("Completed")
-    return 'transported/'+splitFileFirstName+'.stl'
+    var = 'transported/'+splitFileFirstName+'.stl' 
+    var1 =  'transportedImg/'+splitFileFirstName+'.jpg'
+    return var ,var1
+# breakpoint()
 
 # if __name__ == "__main__":
 #     if len(sys.argv) != 3:

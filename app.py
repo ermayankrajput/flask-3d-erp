@@ -1,4 +1,4 @@
-from flask import Flask, abort,jsonify, request ,Blueprint
+from flask import Flask, abort,jsonify, request ,Blueprint, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 import json
 import os
@@ -69,7 +69,7 @@ def add_header(r):
     r.headers["Pragma"] = "no-cache"
     r.headers["Expires"] = "0"
     r.headers['Cache-Control'] = 'public, max-age=0'
-    # r.headers['Content-Type'] = 'application/json'
+    r.headers['Access-Control-Allow-Origin'] = '*'
     return r
 
 @app.route('/')
