@@ -6,6 +6,8 @@ import signal
 import time
 from multiprocessing import Process
 import subprocess
+from datetime import datetime
+
 import multiprocessing
 # from streamlit import caching
 
@@ -70,10 +72,20 @@ if __name__ == '__main__':
 
 # from Pets.petApi import *
 # from converters.converter import *
-ret = {'foo': False}
+ret = {'foo': False, "converted_file": ""}
 
-@app.route('/testm')
+@app.route('/testm',methods=['GET', 'POST'])
 def test():
+    file = request.files["file"]
+    uniqueFileName = str(datetime.now().timestamp()).replace(".","")
+    uTimeDate = str(uniqueFileName)
+    file.save(f"uploads/{uTimeDate+file.filename}")
+    fileServerPath = 'uploads/'+uTimeDate+file.filename
+    hostName = request.headers.get('Host')
+    # breakpoint()
+
+
+    # fileName = main_my(fileServerPath)
     # procs = []
     # proc = Process(target=meshRun)  # instantiating without any argument
     # procs.append(proc)
@@ -81,15 +93,19 @@ def test():
     # return "working on it"
     queue = multiprocessing.Queue()
     queue.put(ret)
-    p = multiprocessing.Process(target=meshRun, args=(queue,))
+    p = multiprocessing.Process(target=meshRun, args=(queue,fileServerPath,))
     p.start()
     p.join()
-    print(queue.get())
-    return "yha jayega return"
+    queueInfo  = queue.get()   
+    return jsonify({"success": True, "file": queueInfo['converted_file']})
 
-def meshRun(queue):
+def meshRun(queue,fileServerPath):
+    fileNameSplit = fileServerPath.split("/")    
+    FileMainName = fileNameSplit[len(fileNameSplit)-1]
+    splitFile = FileMainName.split(".")
+    splitFileFirstName = splitFile[len(splitFile)-2]
     ret = queue.get()
-    mesh = trimesh.Trimesh(**trimesh.interfaces.gmsh.load_gmsh(file_name = 'abc.stp', gmsh_args = [
+    mesh = trimesh.Trimesh(**trimesh.interfaces.gmsh.load_gmsh(fileServerPath, gmsh_args = [
                 ("Mesh.Algorithm", 2), #Different algorithm types, check them out
                 ("Mesh.CharacteristicLengthFromCurvature", 50), #Tuning the smoothness, + smothness = + time
                 ("General.NumThreads", 10), #Multithreading capability
@@ -99,8 +115,9 @@ def meshRun(queue):
     print("Mesh Area: ", mesh.area)
 
     # Export the new mesh in the STL format
-    mesh.export('converted_in3.stl')
+    mesh.export('uploads/transported/'+splitFileFirstName+'.stl')
     ret['foo'] = True
+    ret['converted_file'] = 'uploads/transported/'+splitFileFirstName+'.stl'
     queue.put(ret)
 
 @app.after_request
