@@ -6,10 +6,15 @@ from datetime import datetime
 import json
 from app import app
 db = SQLAlchemy(app)
+import trimesh
+# import signal
+# import time
+
 
 petApi_blueprint = Blueprint('petApi_blueprint', __name__)
 
 class Pet(db.Model):
+    # kill_now = False
     __tablename__ = 'pets'
     id = db.Column(db.Integer, primary_key = True)
     pet_name = db. Column(db.String(100), nullable = False)
@@ -18,6 +23,13 @@ class Pet(db.Model):
     pet_description = db.Column(db.String(100), nullable = False)
     user_file = db.Column(db.Text(), nullable = False)
     
+    # def __init__(self):
+    #     signal.signal(signal.SIGINT, self.exit_gracefully)
+    #     signal.signal(signal.SIGTERM, self.exit_gracefully)
+
+    # def exit_gracefully(self, *args):
+    #     self.kill_now = True
+
     
     def __repr__(self):
         return "<Pet %r>" % self.pet_name
@@ -30,6 +42,21 @@ with app.app_context():
 @petApi_blueprint.route("/petst", methods = ["GET"])
 def got():
     return jsonify({"success": True, "response": "Pet deleted"})
+
+
+# @petApi_blueprint.route('/testm')
+# def test():
+#     mesh = trimesh.Trimesh(**trimesh.interfaces.gmsh.load_gmsh(file_name = 'abc.stp', gmsh_args = [
+#                 ("Mesh.Algorithm", 1), #Different algorithm types, check them out
+#                 ("Mesh.CharacteristicLengthFromCurvature", 50), #Tuning the smoothness, + smothness = + time
+#                 ("General.NumThreads", 10), #Multithreading capability
+#                 ("Mesh.MinimumCirclePoints", 32)])) 
+#     print("Mesh volume: ", mesh.volume)
+#     print("Mesh Bounding Box volume: ", mesh.bounding_box_oriented.volume)
+#     print("Mesh Area: ", mesh.area)
+
+#     # Export the new mesh in the STL format
+#     mesh.export('converted_in.stl')
 
 
 @petApi_blueprint.route("/pets/<int:pet_id>", methods = ["DELETE"])

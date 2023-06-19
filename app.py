@@ -2,10 +2,15 @@ from flask import Flask, abort,jsonify, request ,Blueprint, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 import json
 import os
+import signal
+import time
+from multiprocessing import Process
+import subprocess
+import multiprocessing
 # from streamlit import caching
 
 
-# import trimesh
+import trimesh
 
 # app = Flask(__name__, static_folder='transported')
 app = Flask(__name__, static_folder='uploads')
@@ -41,29 +46,62 @@ app.register_blueprint(conv_blueprint)
 # @app.route('/')
 # def index():
 #     return jsonify({"message": "Welcome to my pet store"})
+# class GracefulKiller:
+#   kill_now = False
+#   def __init__(self):
+#     signal.signal(signal.SIGINT, self.exit_gracefully)
+#     signal.signal(signal.SIGTERM, self.exit_gracefully)
+
+#   def exit_gracefully(self, *args):
+#     self.kill_now = True
 
     
 
 if __name__ == '__main__':
+    app.run()
     # db.create_all()
-    app.run(debug=True)
+    # app.run(debug=True)
+    # killer = GracefulKiller()
+    # while not killer.kill_now:
+    #     time.sleep(1)
+
+
+# __init__.py
 
 # from Pets.petApi import *
 # from converters.converter import *
+ret = {'foo': False}
 
-# mesh = trimesh.Trimesh(**trimesh.interfaces.gmsh.load_gmsh(file_name = 'images/Convert.stp', gmsh_args = [
-#             ("Mesh.Algorithm", 1), #Different algorithm types, check them out
-#             ("Mesh.CharacteristicLengthFromCurvature", 50), #Tuning the smoothness, + smothness = + time
-#             ("General.NumThreads", 10), #Multithreading capability
-#             ("Mesh.MinimumCirclePoints", 32)])) 
-# print("Mesh volume: ", mesh.volume)
-# print("Mesh Bounding Box volume: ", mesh.bounding_box_oriented.volume)
-# print("Mesh Area: ", mesh.area)
+@app.route('/testm')
+def test():
+    # procs = []
+    # proc = Process(target=meshRun)  # instantiating without any argument
+    # procs.append(proc)
+    # proc.start()
+    # return "working on it"
+    queue = multiprocessing.Queue()
+    queue.put(ret)
+    p = multiprocessing.Process(target=meshRun, args=(queue,))
+    p.start()
+    p.join()
+    print(queue.get())
+    return "yha jayega return"
 
-    
-    ## Export the new mesh in the STL format
-# mesh.export('converted_in.STL')
+def meshRun(queue):
+    ret = queue.get()
+    mesh = trimesh.Trimesh(**trimesh.interfaces.gmsh.load_gmsh(file_name = 'abc.stp', gmsh_args = [
+                ("Mesh.Algorithm", 2), #Different algorithm types, check them out
+                ("Mesh.CharacteristicLengthFromCurvature", 50), #Tuning the smoothness, + smothness = + time
+                ("General.NumThreads", 10), #Multithreading capability
+                ("Mesh.MinimumCirclePoints", 32)])) 
+    print("Mesh volume: ", mesh.volume)
+    # print("Mesh Bounding Box volume: ", mesh.bounding_box_oriented.volume)
+    print("Mesh Area: ", mesh.area)
 
+    # Export the new mesh in the STL format
+    mesh.export('converted_in3.stl')
+    ret['foo'] = True
+    queue.put(ret)
 
 @app.after_request
 def add_header(r):
