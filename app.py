@@ -1,30 +1,46 @@
 from flask import Flask, abort,jsonify, request ,Blueprint, send_from_directory
-from flask_sqlalchemy import SQLAlchemy
-import json
+# from flask_sqlalchemy import SQLAlchemy
 import os
-import signal
-import time
+from flask_migrate import Migrate
 from multiprocessing import Process
-import subprocess
-from datetime import datetime
 
+from datetime import datetime
 import multiprocessing
 # from streamlit import caching
-
 
 import trimesh
 
 # app = Flask(__name__, static_folder='transported')
 app = Flask(__name__, static_folder='uploads')
 print(app.static_folder)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:password@localhost/pets'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:password@localhost/three_erp'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# db = SQLAlchemy(app)
+# migrate = Migrate(app, db)
 # caching.clear_cache()
-from Pets.petApi import petApi_blueprint
-app.register_blueprint(petApi_blueprint)
+# from Pets.petApi import petApi_blueprint
+# app.register_blueprint(petApi_blueprint)
 
 from converted.conv import conv_blueprint
 app.register_blueprint(conv_blueprint)
+
+from database.database_models import database_models_blueprint
+app.register_blueprint(database_models_blueprint)
+
+from quote.quote_api import quote_api_blueprint
+app.register_blueprint(quote_api_blueprint)
+
+# class quote(db.model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     date = db.Column(db.date,nullable = False)
+#     validity = db.Column(db.Integer(),nullable = False)
+#     shipping_cost = db.Column(db.Integer(),nullable = False)
+#     grand_total = db.Column(db.Integer(),nullable = False)
+
+
+
+
+
 # from converters.converter import converter_blueprint
 # app.register_blueprint(converter_blueprint)
 # db = SQLAlchemy(app)
@@ -79,6 +95,8 @@ def test():
     file = request.files["file"]
     uniqueFileName = str(datetime.now().timestamp()).replace(".","")
     uTimeDate = str(uniqueFileName)
+    if not os.path.exists('uploads'):
+        os.makedirs('uploads')
     file.save(f"uploads/{uTimeDate+file.filename}")
     fileServerPath = 'uploads/'+uTimeDate+file.filename
     hostName = request.headers.get('Host')
@@ -114,6 +132,8 @@ def meshRun(queue,fileServerPath):
     # print("Mesh Bounding Box volume: ", mesh.bounding_box_oriented.volume)
     print("Mesh Area: ", mesh.area)
 
+    if not os.path.exists('uploads/transported'):
+        os.makedirs('uploads/transported')
     # Export the new mesh in the STL format
     mesh.export('uploads/transported/'+splitFileFirstName+'.stl')
     ret['foo'] = True

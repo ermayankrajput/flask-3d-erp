@@ -3,9 +3,14 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, abort, jsonify, request
 # from converters.converter import converter
 from datetime import datetime
+from flask_migrate import Migrate
+from sqlalchemy.sql import func
+# from flask_migrate import Migrate
+
 import json
 from app import app
 db = SQLAlchemy(app)
+migrate = Migrate(app, db, compare_type=True)
 import trimesh
 # import signal
 # import time
@@ -34,8 +39,9 @@ class Pet(db.Model):
     def __repr__(self):
         return "<Pet %r>" % self.pet_name
     
-with app.app_context():
-    db.create_all()
+
+
+
 
 
 

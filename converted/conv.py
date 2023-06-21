@@ -32,6 +32,8 @@ def conversion():
 
     uniqueFileName = str(datetime.now().timestamp()).replace(".","")
     uTimeDate = str(uniqueFileName)
+    if not os.path.exists('uploads'):
+        os.makedirs('uploads')
     file.save(f"uploads/{uTimeDate+file.filename}")
     fileServerPath = 'uploads/'+uTimeDate+file.filename
     fileName = main_my(fileServerPath)
