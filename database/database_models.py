@@ -21,6 +21,16 @@ class Quote(db.Model):
 
     def __repr__(self):
         return "<Quote %r>" % self.grand_total
+    
+    def serialize(self):
+        if self.quote_infos:
+            quote_infos = [quote_infos.serialize() for quote_infos in self.quote_infos]
+        return {"id": self.id,
+                "quote_date": self.quote_date,
+                "validity": self.validity,
+                "grand_total": self.grand_total,
+                "quote_infos": quote_infos
+                }
 
 class QuoteInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -39,16 +49,39 @@ class QuoteInfo(db.Model):
     def __repr__(self):
         return "<QuoteInfo %r>" % self.image_file
     
+    def serialize(self):
+        if self.unit_quote:
+            unit_quote = [unit_quote.serialize() for unit_quote in self.unit_quote]
+        return {"id": self.id,
+                "image_file": self.image_file,
+                "uploded_file" : self.uploded_file,
+                "transported_file":self.transported_file,
+                "technique": self.technique,
+                "finishing" : self.finishing,
+                "x_size" : self.x_size,
+                "y_size": self.y_size,
+                "z_size":self.z_size,
+                "unit_quote": unit_quote
+                }
+    
 
 class UnitQuote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    unit_price = db.Column(db.Numeric,nullable = False)
+    unit_price = db.Column(db.Numeric,nullable = True)
     quantity = db.Column(db.Integer,nullable = True)
     lead_time = db.Column(db.Integer,nullable = True)
     quote_info_id = db.Column(db.Integer, db.ForeignKey('quote_info.id'))
 
     def __repr__(self):
         return "<UnitQuote %r>" % self.lead_time
+    
+
+    def serialize(self):
+        return {"id" : self.id,
+                "unit_price" : self.unit_price,
+                "quantity": self.quantity,
+                "lead_time": self.lead_time,
+        }
 
 with app.app_context():
     db.create_all()

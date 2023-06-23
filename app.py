@@ -1,20 +1,31 @@
 from flask import Flask, abort,jsonify, request ,Blueprint, send_from_directory
 # from flask_sqlalchemy import SQLAlchemy
 import os
-from flask_migrate import Migrate
-from multiprocessing import Process
+# from flask_migrate import Migrate
+# from multiprocessing import Process
 
 from datetime import datetime
-import multiprocessing
+# import multiprocessing
 # from streamlit import caching
 
 import trimesh
+
+# from mesh_converter import meshRun
 
 # app = Flask(__name__, static_folder='transported')
 app = Flask(__name__, static_folder='uploads')
 print(app.static_folder)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:password@localhost/three_erp'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+@app.after_request
+def add_header(r):
+    r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    r.headers["Pragma"] = "no-cache"
+    r.headers["Expires"] = "0"
+    r.headers['Cache-Control'] = 'public, max-age=0'
+    r.headers['Access-Control-Allow-Origin'] = '*'
+    return r
 # db = SQLAlchemy(app)
 # migrate = Migrate(app, db)
 # caching.clear_cache()
@@ -88,7 +99,7 @@ if __name__ == '__main__':
 
 # from Pets.petApi import *
 # from converters.converter import *
-ret = {'foo': False, "converted_file": ""}
+# ret = {'foo': False, "converted_file": ""}
 
 @app.route('/testm',methods=['GET', 'POST'])
 def test():
@@ -109,49 +120,40 @@ def test():
     # procs.append(proc)
     # proc.start()
     # return "working on it"
-    queue = multiprocessing.Queue()
-    queue.put(ret)
-    p = multiprocessing.Process(target=meshRun, args=(queue,fileServerPath,))
-    p.start()
-    p.join()
-    queueInfo  = queue.get()   
-    return jsonify({"success": True, "file": queueInfo['converted_file']})
+    # queue = multiprocessing.Queue()
+    # queue.put(ret)
+    # p = multiprocessing.Process(target=meshRun, args=(queue,fileServerPath,))
+    # p.start()
+    # p.join()
+    # queueInfo  = queue.get()   
+    # return jsonify({"success": True, "file": queueInfo['converted_file']})
 
-def meshRun(queue,fileServerPath):
-    fileNameSplit = fileServerPath.split("/")    
-    FileMainName = fileNameSplit[len(fileNameSplit)-1]
-    splitFile = FileMainName.split(".")
-    splitFileFirstName = splitFile[len(splitFile)-2]
-    ret = queue.get()
-    mesh = trimesh.Trimesh(**trimesh.interfaces.gmsh.load_gmsh(fileServerPath, gmsh_args = [
-                ("Mesh.Algorithm", 2), #Different algorithm types, check them out
-                ("Mesh.CharacteristicLengthFromCurvature", 50), #Tuning the smoothness, + smothness = + time
-                ("General.NumThreads", 10), #Multithreading capability
-                ("Mesh.MinimumCirclePoints", 32)])) 
-    print("Mesh volume: ", mesh.volume)
-    # print("Mesh Bounding Box volume: ", mesh.bounding_box_oriented.volume)
-    print("Mesh Area: ", mesh.area)
+# def meshRun(queue,fileServerPath):
+#     fileNameSplit = fileServerPath.split("/")    
+#     FileMainName = fileNameSplit[len(fileNameSplit)-1]
+#     splitFile = FileMainName.split(".")
+#     splitFileFirstName = splitFile[len(splitFile)-2]
+#     ret = queue.get()
+#     mesh = trimesh.Trimesh(**trimesh.interfaces.gmsh.load_gmsh(fileServerPath, gmsh_args = [
+#                 ("Mesh.Algorithm", 2), #Different algorithm types, check them out
+#                 ("Mesh.CharacteristicLengthFromCurvature", 50), #Tuning the smoothness, + smothness = + time
+#                 ("General.NumThreads", 10), #Multithreading capability
+#                 ("Mesh.MinimumCirclePoints", 32)])) 
+#     print("Mesh volume: ", mesh.volume)
+#     # print("Mesh Bounding Box volume: ", mesh.bounding_box_oriented.volume)
+#     print("Mesh Area: ", mesh.area)
 
-    if not os.path.exists('uploads/transported'):
-        os.makedirs('uploads/transported')
-    # Export the new mesh in the STL format
-    mesh.export('uploads/transported/'+splitFileFirstName+'.stl')
-    ret['foo'] = True
-    ret['converted_file'] = 'uploads/transported/'+splitFileFirstName+'.stl'
-    queue.put(ret)
-
-@app.after_request
-def add_header(r):
-    r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    r.headers["Pragma"] = "no-cache"
-    r.headers["Expires"] = "0"
-    r.headers['Cache-Control'] = 'public, max-age=0'
-    r.headers['Access-Control-Allow-Origin'] = '*'
-    return r
+#     if not os.path.exists('uploads/transported'):
+#         os.makedirs('uploads/transported')
+#     # Export the new mesh in the STL format
+#     mesh.export('uploads/transported/'+splitFileFirstName+'.stl')
+#     ret['foo'] = True
+#     ret['converted_file'] = 'uploads/transported/'+splitFileFirstName+'.stl'
+#     queue.put(ret)
 
 @app.route('/')
 def index():
-    return jsonify({"message": "Welcome to my pet store"})
+    return jsonify({"message": "Welcome to my quote data"})
 
 @app.route('/uploads/<path:filename>', methods=['GET', 'POST'])
 def responseTransportedFile(filename):

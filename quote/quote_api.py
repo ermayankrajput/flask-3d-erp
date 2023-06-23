@@ -1,24 +1,94 @@
-from flask import Blueprint, request,jsonify
+from flask import Blueprint, abort, request,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime,date
 from database.database_models import Quote,QuoteInfo,UnitQuote,app, db
+import multiprocessing
+from mesh_converter import meshRun
+import json
 
 
 quote_api_blueprint = Blueprint('quote_api_blueprint', __name__)
 
-
+@quote_api_blueprint.route('/3d-file-upload', methods = ['POST'])
+def upload3dFile():
+    # POST Request File
+    file = request.files["file"]
+    uniqueFileName = str(datetime.now().timestamp()).replace(".","")
+    uTimeDate = str(uniqueFileName)
+    file.save(f"uploads/{uniqueFileName+file.filename}")
+    fileServerPath = 'uploads/'+uTimeDate+file.filename
+    ret = {'foo': False, "converted_file": ""}
+    queue = multiprocessing.Queue()
+    queue.put(ret)
+    p = multiprocessing.Process(target=meshRun, args=(queue,fileServerPath,))
+    p.start()
+    p.join()
+    queueInfo  = queue.get()
+    updated_file = f"uploads/{uniqueFileName+file.filename}"
+    transported_file = queueInfo['converted_file']
+    return jsonify({"Success":True,"updated_file":updated_file,"transported_file":transported_file})
 
 @quote_api_blueprint.route('/quote', methods = ['POST'])
-def create():
-
-    file = request.files["u_file"]
-    uniqueFileName = str(datetime.now().timestamp()).replace(".","")
-    fileNameSplit = file.filename.split(".")
-    ext = fileNameSplit[len(fileNameSplit)-1]
-    file.save(f"uploads/{uniqueFileName}.{ext}")
-    quote = Quote(quote_date = str(datetime.now()), validity = 30, shipping_cost = 500, grand_total = 1500, )
-    # pet = Pet( user_file = user_file)
+def createQuote():
+    # POST Request 
+    # {
+    #     "files":{
+    #         "transported_file": "uploads/transported/1687436341754127abc.stl",
+    #         "updated_file": "uploads/1687436341754127abc.stp"
+    #     }
+    # }
+    updated_file = request.get_json().get('files')['updated_file'] 
+    transported_file = request.get_json().get('files')['transported_file']
+    quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None)
     db.session.add(quote)
     db.session.commit()
-    # breakpoint()
-    return jsonify({"success": True,"response":"Quote added"})
+    quoteinfo = QuoteInfo(uploded_file = updated_file,transported_file = transported_file ,material_search = None,technique = None,finishing = None,x_size = None,y_size= None,z_size = None,quote_id = quote.id,image_file=None)
+    db.session.add(quoteinfo)
+    db.session.commit()
+    unitquote = UnitQuote(unit_price = None,quantity = None,lead_time=None,quote_info_id=quoteinfo.id)
+    db.session.add(unitquote)
+    db.session.commit()
+    return jsonify(quote.serialize())
+
+
+@quote_api_blueprint.route('/quote/<int:quote_id>/create-quote-info/', methods = ['POST'])
+def createQuoteInfo(quote_id):
+
+    quote = Quote.query.get(quote_id)
+    if quote is None:
+        abort(404)
+    else:
+        updated_file = request.get_json().get('files')['updated_file'] 
+        transported_file = request.get_json().get('files')['transported_file']
+        quoteinfo = QuoteInfo(uploded_file = updated_file,transported_file = transported_file ,material_search = None,technique = None,finishing = None,x_size = None,y_size= None,z_size = None,quote_id = quote_id,image_file=None)
+        db.session.add(quoteinfo)
+        db.session.commit()
+        unitquote = UnitQuote(unit_price = None,quantity = None,lead_time=None,quote_info_id=quoteinfo.id)
+        db.session.add(unitquote)
+        db.session.commit()
+        return jsonify(quoteinfo.serialize())
+    
+@quote_api_blueprint.route('/unit-quote/<int:quote_info_id>/create-unit-quote', methods = ['POST'])
+def createUnitQuote(quote_info_id):
+    quoteInfo = QuoteInfo.query.get(quote_info_id)
+    # quote_infoid = request.get_json().get('quote_info_id')
+    if quoteInfo is None:
+        abort(404)
+    else:
+        unitquote = UnitQuote(unit_price = None,quantity = None,lead_time=None,quote_info_id=quoteInfo.id)
+        db.session.add(unitquote)
+        db.session.commit()
+        return jsonify(unitquote.serialize())
+
+@quote_api_blueprint.route('/unit-quote/<int:unit_quote_id>', methods = ['PATCH'])
+def updateUnitQuote(unit_quote_id):
+    unit_quote = UnitQuote.query.get(unit_quote_id)
+    if unit_quote is None:
+        abort(404)
+    else:
+        # unitquote = UnitQuote(unit_price = None,quantity = None,lead_time=None,quote_info_id=unit_quote.id)
+        # unit_quote.update(request.json)
+        db.session.query(UnitQuote).filter_by(id=unit_quote_id).update(request.json)
+        # db.session.add(unit_quote)
+        db.session.commit()
+        return jsonify(unit_quote.serialize())
