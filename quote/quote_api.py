@@ -9,8 +9,9 @@ import json
 
 quote_api_blueprint = Blueprint('quote_api_blueprint', __name__)
 
-@quote_api_blueprint.route('/3d-file-upload', methods = ['POST'])
+@quote_api_blueprint.route('/file-upload', methods = ['POST'])
 def upload3dFile():
+    # breakpoint()
     # POST Request File
     file = request.files["file"]
     uniqueFileName = str(datetime.now().timestamp()).replace(".","")
@@ -37,6 +38,7 @@ def createQuote():
     #         "updated_file": "uploads/1687436341754127abc.stp"
     #     }
     # }
+
     updated_file = request.get_json().get('files')['updated_file'] 
     transported_file = request.get_json().get('files')['transported_file']
     quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None)
@@ -53,7 +55,6 @@ def createQuote():
 
 @quote_api_blueprint.route('/quote/<int:quote_id>/create-quote-info/', methods = ['POST'])
 def createQuoteInfo(quote_id):
-
     quote = Quote.query.get(quote_id)
     if quote is None:
         abort(404)
@@ -80,15 +81,38 @@ def createUnitQuote(quote_info_id):
         db.session.commit()
         return jsonify(unitquote.serialize())
 
-@quote_api_blueprint.route('/unit-quote/<int:unit_quote_id>', methods = ['PATCH'])
-def updateUnitQuote(unit_quote_id):
-    unit_quote = UnitQuote.query.get(unit_quote_id)
+@quote_api_blueprint.route('/unit-quote/', methods = ['PATCH'])
+def updateUnitQuote():
+    # breakpoint()
+    unit_quote = UnitQuote.query.get(request.json["id"])
+   
     if unit_quote is None:
         abort(404)
     else:
-        # unitquote = UnitQuote(unit_price = None,quantity = None,lead_time=None,quote_info_id=unit_quote.id)
-        # unit_quote.update(request.json)
-        db.session.query(UnitQuote).filter_by(id=unit_quote_id).update(request.json)
-        # db.session.add(unit_quote)
+        db.session.query(UnitQuote).filter_by(id=unit_quote.id).update(request.json)
         db.session.commit()
         return jsonify(unit_quote.serialize())
+
+
+@quote_api_blueprint.route('/quote-info/', methods = ['PATCH'])
+def updateQuoteInfo():
+    quote_info = QuoteInfo.query.get(request.json["id"])
+    if quote_info is None:
+        abort(404)
+    else:
+        db.session.query(QuoteInfo).filter_by(id=quote_info.id).update(request.json)
+        db.session.commit()
+        return jsonify(quote_info.serialize())
+
+
+@quote_api_blueprint.route('/quote/', methods = ['PATCH'])
+def updateQuote():
+    quote = Quote.query.get(request.json["id"])
+    
+    if quote is None:
+        abort(404)
+    else:
+        db.session.query(Quote).filter_by(id=quote.id).update(request.json)
+        db.session.commit()
+        # breakpoint()
+        return jsonify(quote.serialize())

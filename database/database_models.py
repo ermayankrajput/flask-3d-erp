@@ -28,6 +28,7 @@ class Quote(db.Model):
         return {"id": self.id,
                 "quote_date": self.quote_date,
                 "validity": self.validity,
+                "shipping_cost":self.shipping_cost,
                 "grand_total": self.grand_total,
                 "quote_infos": quote_infos
                 }
