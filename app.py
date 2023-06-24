@@ -1,14 +1,14 @@
-from flask import Flask, abort,jsonify, request ,Blueprint, send_from_directory
+from flask import Flask, jsonify
 # from flask_sqlalchemy import SQLAlchemy
 import os
 # from flask_migrate import Migrate
 # from multiprocessing import Process
 
-from datetime import datetime
+# from datetime import datetime
 # import multiprocessing
 # from streamlit import caching
 
-import trimesh
+# import trimesh
 
 # from mesh_converter import meshRun
 
@@ -103,16 +103,16 @@ def index():
 # from converters.converter import *
 # ret = {'foo': False, "converted_file": ""}
 
-@app.route('/testm',methods=['GET', 'POST'])
-def test():
-    file = request.files["file"]
-    uniqueFileName = str(datetime.now().timestamp()).replace(".","")
-    uTimeDate = str(uniqueFileName)
-    if not os.path.exists('uploads'):
-        os.makedirs('uploads')
-    file.save(f"uploads/{uTimeDate+file.filename}")
-    fileServerPath = 'uploads/'+uTimeDate+file.filename
-    hostName = request.headers.get('Host')
+# @app.route('/testm',methods=['GET', 'POST'])
+# def test():
+#     file = request.files["file"]
+#     uniqueFileName = str(datetime.now().timestamp()).replace(".","")
+#     uTimeDate = str(uniqueFileName)
+#     if not os.path.exists('uploads'):
+#         os.makedirs('uploads')
+#     file.save(f"uploads/{uTimeDate+file.filename}")
+#     fileServerPath = 'uploads/'+uTimeDate+file.filename
+#     hostName = request.headers.get('Host')
     # breakpoint()
 
 
@@ -153,14 +153,14 @@ def test():
 #     ret['converted_file'] = 'uploads/transported/'+splitFileFirstName+'.stl'
 #     queue.put(ret)
 
-@app.route('/uploads/<path:filename>', methods=['GET', 'POST'])
-def responseTransportedFile(filename):
-    send_from_directory(app.static_folder, filename)
+# @app.route('/uploads/<path:filename>', methods=['GET', 'POST'])
+# def responseTransportedFile(filename):
+#     send_from_directory(app.static_folder, filename)
 
 
-@app.route('/uploads/<path:filename>', methods=['GET', 'POST'])
-def responseTransportedImgFile(filename):
-    send_from_directory(app.static_folder, filename)
+# @app.route('/uploads/<path:filename>', methods=['GET', 'POST'])
+# def responseTransportedImgFile(filename):
+#     send_from_directory(app.static_folder, filename)
 
 
 # @app.route("/pets/<int:pet_id>", methods = ["DELETE"])
