@@ -86,8 +86,8 @@ def add_header(r):
 
     
 
-if __name__ == '__main__':
-    app.run()
+# if __name__ == '__main__':
+    # app.run()
     # db.create_all()
     # app.run(debug=True)
     # killer = GracefulKiller()
