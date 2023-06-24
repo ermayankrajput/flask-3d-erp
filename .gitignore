@@ -1,3 +1,8 @@
 transportedImg/*
-uploads/*
 transported/*
+flaskenv/
+.env
+**/__pycache__/
+quote/__pycache__/quote_api.cpython-310.pyc
+*.stp
+*.stl
