@@ -108,7 +108,6 @@ def updateQuoteInfo():
 @quote_api_blueprint.route('/quote/', methods = ['PATCH'])
 def updateQuote():
     quote = Quote.query.get(request.json["id"])
-    
     if quote is None:
         abort(404)
     else:
@@ -116,38 +115,24 @@ def updateQuote():
         db.session.commit()
         # breakpoint()
         return jsonify(quote.serialize())
-    
-
 
 @quote_api_blueprint.route("/unit-quote/", methods = ["DELETE"])
 def deleteUnitQuote():
-    unit_quote = UnitQuote.query.get(request.json["id"])
-    if unit_quote is None:
-        abort(404)
-    else:
-        unit_quote.query.filter_by(id=unit_quote.id).delete()
+    if UnitQuote.query.filter_by(id=request.json["id"]).delete():
         db.session.commit()
-        return jsonify({"success":True, "response": "unit_quote deleted","id":unit_quote.id})
-
-
+        return jsonify({"success":True, "response": "Unit Quote deleted","id":request.json["id"]})
+    return jsonify({"success":False, "response": "Unit Quote ID: "+ str(request.json["id"]) +" Not Found"})
 
 @quote_api_blueprint.route("/quote-info/", methods = ["DELETE"])
 def deleteQuoteInfo():
-    quote_info = QuoteInfo.query.get(request.json["id"])
-    if quote_info is None:
-        abort(404)
-    else:
-        quote_info.query.filter_by(id=quote_info.id).delete()
+    if QuoteInfo.query.filter_by(id=request.json["id"]).delete():
         db.session.commit()
-        return jsonify({"success":True, "response": "quote_info deleted","id":quote_info.id})
-    
+        return jsonify({"success":True, "response": "Quote Info deleted","id":request.json["id"]})
+    return jsonify({"success":False, "response": "Quote Info ID: "+ str(request.json["id"]) +" Not Found"})
 
 @quote_api_blueprint.route("/quote/", methods = ["DELETE"])
 def deleteQuote():
-    quote = Quote.query.get(request.json["id"])
-    if quote is None:
-        abort(404)
-    else:
-        quote.query.filter_by(id=quote.id).delete()
+    if Quote.query.filter_by(id=request.json["id"]).delete():
         db.session.commit()
-        return jsonify({"success":True, "response": "quote deleted","id":quote.id})
+        return jsonify({"success":True, "response": "Quote deleted","id":request.json["id"]})
+    return jsonify({"success":False, "response": "Quote ID: "+ str(request.json["id"]) +" Not Found"})
