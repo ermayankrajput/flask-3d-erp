@@ -15,7 +15,7 @@ import trimesh
 # app = Flask(__name__, static_folder='transported')
 app = Flask(__name__, static_folder='uploads')
 print(app.static_folder)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:password@localhost/three_erp'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 @app.after_request

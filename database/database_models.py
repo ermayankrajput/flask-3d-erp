@@ -24,6 +24,7 @@ class Quote(db.Model):
         return "<Quote %r>" % self.grand_total
     
     def serialize(self):
+        quote_infos = []
         if self.quote_infos:
             quote_infos = [quote_infos.serialize() for quote_infos in self.quote_infos]
         return {"id": self.id,
@@ -46,14 +47,15 @@ class QuoteInfo(db.Model):
     y_size = db.Column(db.Numeric,nullable = True)
     z_size = db.Column(db.Numeric,nullable = True)
     quote_id = db.Column(db.Integer, db.ForeignKey('quote.id', ondelete='CASCADE'))
-    unit_quote = db.relationship('UnitQuote', backref = 'QuoteInfo', cascade="all, delete")
+    unit_quotes = db.relationship('UnitQuote', backref = 'QuoteInfo', cascade="all, delete")
 
     def __repr__(self):
         return "<QuoteInfo %r>" % self.image_file
     
     def serialize(self):
-        if self.unit_quote:
-            unit_quote = [unit_quote.serialize() for unit_quote in self.unit_quote]
+        unit_quotes = []
+        if self.unit_quotes:
+            unit_quotes = [unit_quotes.serialize() for unit_quotes in self.unit_quotes]
         return {"id": self.id,
                 "image_file": self.image_file,
                 "uploded_file" : self.uploded_file,
@@ -63,8 +65,8 @@ class QuoteInfo(db.Model):
                 "x_size" : self.x_size,
                 "y_size": self.y_size,
                 "z_size":self.z_size,
-                "unit_quote": unit_quote
-                }
+                "unit_quotes": unit_quotes
+            }
     
 
 class UnitQuote(db.Model):
@@ -82,8 +84,8 @@ class UnitQuote(db.Model):
         return {"id" : self.id,
                 "unit_price" : self.unit_price,
                 "quantity": self.quantity,
-                "lead_time": self.lead_time,
-        }
+                "lead_time": self.lead_time
+            }
 
 with app.app_context():
     db.create_all()

@@ -136,3 +136,20 @@ def deleteQuote():
         db.session.commit()
         return jsonify({"success":True, "response": "Quote deleted","id":request.json["id"]})
     return jsonify({"success":False, "response": "Quote ID: "+ str(request.json["id"]) +" Not Found"})
+
+
+@quote_api_blueprint.route('/unit-quote/<int:unit_quote_id>', methods = ['GET'])
+def getUnitQuote(unit_quote_id):
+    unit_quote = UnitQuote.query.get(unit_quote_id)
+    return jsonify(unit_quote.serialize())
+
+
+@quote_api_blueprint.route('/quote-info/<int:quote_info_id>', methods = ['GET'])
+def getQuoteInfo(quote_info_id):
+    quote_info = QuoteInfo.query.get(quote_info_id)
+    return jsonify(quote_info.serialize())
+
+@quote_api_blueprint.route('/quote/<int:quote_id>', methods = ['GET'])
+def getQuote(quote_id):
+    quote = Quote.query.get(quote_id)
+    return jsonify(quote.serialize())
