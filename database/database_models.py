@@ -19,6 +19,7 @@ class Quote(db.Model):
     updated_at = db.Column(db.DateTime(timezone=True), default=func.now())
     quote_infos = db.relationship('QuoteInfo', backref = 'Quote', cascade="all, delete")
 
+
     def __repr__(self):
         return "<Quote %r>" % self.grand_total
     
