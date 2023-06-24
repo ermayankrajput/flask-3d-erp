@@ -116,3 +116,47 @@ def updateQuote():
         db.session.commit()
         # breakpoint()
         return jsonify(quote.serialize())
+    
+
+
+@quote_api_blueprint.route("/unit-quote/", methods = ["DELETE"])
+def deleteUnitQuote():
+    unit_quote = UnitQuote.query.get(request.json["id"])
+    
+   
+    if unit_quote is None:
+        abort(404)
+    else:
+        unit_quote.query.filter_by(id=unit_quote.id).delete()
+        db.session.commit()
+        return jsonify({"success":True, "response": "unit_quote deleted","id":unit_quote.id})
+
+
+
+@quote_api_blueprint.route("/quote-info/", methods = ["DELETE"])
+def deleteQuoteInfo():
+    quote_info = QuoteInfo.query.get(request.json["id"])
+    # breakpoint()
+    if quote_info is None:
+        abort(404)
+    else:
+        UnitQuote.query.filter_by(quote_info_id = quote_info.id).delete()
+        quote_info.query.filter_by(id=quote_info.id).delete()
+        db.session.commit()
+        return jsonify({"success":True, "response": "quote_info deleted","id":quote_info.id})
+    
+
+@quote_api_blueprint.route("/quote/", methods = ["DELETE"])
+def deleteQuote():
+    # Delete Quote 38
+    quote = Quote.query.get(request.json["id"])
+    if quote is None:
+        abort(404)
+    else:
+        quoteInfos = QuoteInfo.query.filter_by(quote_id = quote.id).all()
+        for quoteInfo in quoteInfos:
+            UnitQuote.query.filter_by(quote_info_id = quoteInfo.id).delete()
+        QuoteInfo.query.filter_by(quote_id = quote.id).delete()
+        quote.query.filter_by(id=quote.id).delete()
+        db.session.commit()
+        return jsonify({"success":True, "response": "quote deleted","id":quote.id})
