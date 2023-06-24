@@ -14,18 +14,18 @@ import trimesh
 
 # app = Flask(__name__, static_folder='transported')
 app = Flask(__name__, static_folder='uploads')
-print(app.static_folder)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:password@localhost/three_erp'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# print(app.static_folder)
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:password@localhost/three_erp'
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-@app.after_request
-def add_header(r):
-    r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    r.headers["Pragma"] = "no-cache"
-    r.headers["Expires"] = "0"
-    r.headers['Cache-Control'] = 'public, max-age=0'
-    r.headers['Access-Control-Allow-Origin'] = '*'
-    return r
+# @app.after_request
+# def add_header(r):
+#     r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+#     r.headers["Pragma"] = "no-cache"
+#     r.headers["Expires"] = "0"
+#     r.headers['Cache-Control'] = 'public, max-age=0'
+#     r.headers['Access-Control-Allow-Origin'] = '*'
+#     return r
 # db = SQLAlchemy(app)
 # migrate = Migrate(app, db)
 # caching.clear_cache()
@@ -87,13 +87,15 @@ def add_header(r):
     
 
 if __name__ == '__main__':
-    app.run(host = '0.0.0.0')
+    app.run(debug = True, host = '0.0.0.0', port = 5000)
     # db.create_all()
     # app.run(debug=True)
     # killer = GracefulKiller()
     # while not killer.kill_now:
     #     time.sleep(1)
-
+@app.route('/')
+def index():
+    return jsonify({"message": "Welcome to my quote data"})
 
 # __init__.py
 
@@ -150,10 +152,6 @@ def test():
 #     ret['foo'] = True
 #     ret['converted_file'] = 'uploads/transported/'+splitFileFirstName+'.stl'
 #     queue.put(ret)
-
-@app.route('/')
-def index():
-    return jsonify({"message": "Welcome to my quote data"})
 
 @app.route('/uploads/<path:filename>', methods=['GET', 'POST'])
 def responseTransportedFile(filename):
