@@ -17,7 +17,7 @@ class Quote(db.Model):
     grand_total = db.Column(db.Numeric,nullable = True)
     created_at = db.Column(db.DateTime(timezone=True), default=func.now())
     updated_at = db.Column(db.DateTime(timezone=True), default=func.now())
-    quote_infos = db.relationship('QuoteInfo', backref = 'Quote')
+    quote_infos = db.relationship('QuoteInfo', backref = 'Quote', cascade="all, delete")
 
     def __repr__(self):
         return "<Quote %r>" % self.grand_total
@@ -44,8 +44,8 @@ class QuoteInfo(db.Model):
     x_size = db.Column(db.Numeric,nullable = True)
     y_size = db.Column(db.Numeric,nullable = True)
     z_size = db.Column(db.Numeric,nullable = True)
-    quote_id = db.Column(db.Integer, db.ForeignKey('quote.id'))
-    unit_quote = db.relationship('UnitQuote', backref = 'QuoteInfo')
+    quote_id = db.Column(db.Integer, db.ForeignKey('quote.id', ondelete='CASCADE'))
+    unit_quote = db.relationship('UnitQuote', backref = 'QuoteInfo', cascade="all, delete")
 
     def __repr__(self):
         return "<QuoteInfo %r>" % self.image_file
@@ -71,7 +71,7 @@ class UnitQuote(db.Model):
     unit_price = db.Column(db.Numeric,nullable = True)
     quantity = db.Column(db.Integer,nullable = True)
     lead_time = db.Column(db.Integer,nullable = True)
-    quote_info_id = db.Column(db.Integer, db.ForeignKey('quote_info.id'))
+    quote_info_id = db.Column(db.Integer, db.ForeignKey('quote_info.id', ondelete='CASCADE'))
 
     def __repr__(self):
         return "<UnitQuote %r>" % self.lead_time
