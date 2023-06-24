@@ -1,4 +1,5 @@
 transportedImg/*
 transported/*
-flaskenv
-flaskenv/*
+flaskenv/
+flaskenv/pyvenv.cfg
+flaskenv/pyvenv.cfg
