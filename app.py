@@ -26,6 +26,15 @@ def add_header(r):
     r.headers['Cache-Control'] = 'public, max-age=0'
     r.headers['Access-Control-Allow-Origin'] = '*'
     return r
+
+if __name__ == '__main__':
+    app.run()
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    # note that we set the 404 status explicitly
+    return "Error"
 # db = SQLAlchemy(app)
 # migrate = Migrate(app, db)
 # caching.clear_cache()
@@ -86,8 +95,7 @@ app.register_blueprint(quote_api_blueprint)
 
     
 
-if __name__ == '__main__':
-    app.run()
+
     # db.create_all()
     # app.run(debug=True)
     # killer = GracefulKiller()

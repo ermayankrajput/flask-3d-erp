@@ -243,3 +243,12 @@ def getAllQuoteByDate():
     quotes = Quote.query.filter(func.date(Quote.quote_date)==request.args.get('date') ).all()
     result = [quote.serialize() for quote in quotes]
     return jsonify(result)
+
+
+
+@quote_api_blueprint.route('/quotes-b/w-date/', methods = ['GET'])
+def getAllQuoteBetweenDate():
+    # breakpoint()
+    quotes = Quote.query.filter(func.date(Quote.quote_date).between(request.args.get('date'),request.args.get('end'))).all()
+    result = [quote.serialize() for quote in quotes]
+    return jsonify(result)
