@@ -1,7 +1,9 @@
 from flask import Blueprint, Response, abort, request,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime,date
-from database.database_models import Quote,QuoteInfo,UnitQuote,app, db
+
+from sqlalchemy import func
+from database.database_models import Quote,QuoteInfo,UnitQuote,db
 import multiprocessing
 from mesh_converter import meshRun
 import json
@@ -28,10 +30,11 @@ def upload3dFile():
     updated_file = f"uploads/{uniqueFileName+file.filename}"
     transported_file = queueInfo['converted_file']
     return jsonify({"Success":True,"updated_file":updated_file,"transported_file":transported_file})
+# POST Request
+
 
 @quote_api_blueprint.route('/quote', methods = ['POST'])
 def createQuote():
-    # POST Request 
     # {
     #     "files":{
     #         "transported_file": "uploads/transported/1687436341754127abc.stl",
@@ -52,6 +55,16 @@ def createQuote():
     db.session.commit()
     return jsonify(quote.serialize())
 
+# Endpoint belong to create quote info ...
+# call to nedd 2 file in the below format...and will return unit-quote data
+# Endpoint ex: /quote/19/create-quote-info/
+# Request Example below 
+#     {
+#         "files":{
+#             "transported_file": "uploads/transported/1687436341754127abc.stl",
+#             "updated_file": "uploads/1687436341754127abc.stp"
+#         }
+#     }
 
 @quote_api_blueprint.route('/quote/<int:quote_id>/create-quote-info/', methods = ['POST'])
 def createQuoteInfo(quote_id):
@@ -69,6 +82,11 @@ def createQuoteInfo(quote_id):
         db.session.commit()
         return jsonify(quoteinfo.serialize())
     
+
+# API belong to create unit quote..
+# need  to create unit quote data only..
+
+
 @quote_api_blueprint.route('/unit-quote/<int:quote_info_id>/create-unit-quote', methods = ['POST'])
 def createUnitQuote(quote_info_id):
     quoteInfo = QuoteInfo.query.get(quote_info_id)
@@ -80,6 +98,13 @@ def createUnitQuote(quote_info_id):
         db.session.add(unitquote)
         db.session.commit()
         return jsonify(unitquote.serialize())
+    
+
+# UPDATE REQUEST...
+
+# API belong to update unit-quote..
+# need unit-quote id and to change data..
+# in json form
 
 @quote_api_blueprint.route('/unit-quote/', methods = ['PATCH'])
 def updateUnitQuote():
@@ -93,6 +118,9 @@ def updateUnitQuote():
         db.session.commit()
         return jsonify(unit_quote.serialize())
 
+# API belong to update quote-info..
+# need quote-info id and to change data..
+# in json form
 
 @quote_api_blueprint.route('/quote-info/', methods = ['PATCH'])
 def updateQuoteInfo():
@@ -105,6 +133,10 @@ def updateQuoteInfo():
         return jsonify(quote_info.serialize())
 
 
+# API belong to update quote..
+# need quote id and to change data..
+# in json form
+
 @quote_api_blueprint.route('/quote/', methods = ['PATCH'])
 def updateQuote():
     quote = Quote.query.get(request.json["id"])
@@ -116,12 +148,24 @@ def updateQuote():
         # breakpoint()
         return jsonify(quote.serialize())
 
+#DELETE REQUEST
+
+
+# API belong to update unit-quote..
+# need unit-quote id and to delete data..
+# in json form
+
 @quote_api_blueprint.route("/unit-quote/", methods = ["DELETE"])
 def deleteUnitQuote():
     if UnitQuote.query.filter_by(id=request.json["id"]).delete():
         db.session.commit()
         return jsonify({"success":True, "response": "Unit Quote deleted","id":request.json["id"]})
     return jsonify({"success":False, "response": "Unit Quote ID: "+ str(request.json["id"]) +" Not Found"})
+
+
+# API belong to update quote-info..
+# need quote-info id and to delete data..
+# in json form
 
 @quote_api_blueprint.route("/quote-info/", methods = ["DELETE"])
 def deleteQuoteInfo():
@@ -130,6 +174,11 @@ def deleteQuoteInfo():
         return jsonify({"success":True, "response": "Quote Info deleted","id":request.json["id"]})
     return jsonify({"success":False, "response": "Quote Info ID: "+ str(request.json["id"]) +" Not Found"})
 
+
+# API belong to update quote..
+# need quote id and to delete data..
+# in json form
+
 @quote_api_blueprint.route("/quote/", methods = ["DELETE"])
 def deleteQuote():
     if Quote.query.filter_by(id=request.json["id"]).delete():
@@ -137,18 +186,29 @@ def deleteQuote():
         return jsonify({"success":True, "response": "Quote deleted","id":request.json["id"]})
     return jsonify({"success":False, "response": "Quote ID: "+ str(request.json["id"]) +" Not Found"})
 
+#GET REQUEST
+
+
+# API belong to Get unit-quote..
+# need unit-quote id to get quote in url..
+
 
 @quote_api_blueprint.route('/unit-quote/<int:unit_quote_id>', methods = ['GET'])
 def getUnitQuote(unit_quote_id):
     unit_quote = UnitQuote.query.get(unit_quote_id)
     return jsonify(unit_quote.serialize())
 
+# API belong to Get quote-info..
+# need quote-info id to get quote in url..
 
 @quote_api_blueprint.route('/quote-info/<int:quote_info_id>', methods = ['GET'])
 def getQuoteInfo(quote_info_id):
     quote_info = QuoteInfo.query.get(quote_info_id)
     return jsonify(quote_info.serialize())
 
+
+# API belong to Get quote..
+# need quote id to get quote in url.. ex: /quote/19
 @quote_api_blueprint.route('/quote/<int:quote_id>', methods = ['GET'])
 def getQuote(quote_id):
     quote = Quote.query.get(quote_id)
@@ -156,7 +216,7 @@ def getQuote(quote_id):
 
 
 @quote_api_blueprint.route('/quotes/', methods = ['GET'])
-def getAllQuote():
+def getAllQuotes():
     quotes = Quote.query.all()
     result = [quote.serialize() for quote in quotes]
     return jsonify(result)
@@ -172,4 +232,13 @@ def getAllUnitQuote():
 def getAllQuoteInfo():
     quote_infos = QuoteInfo.query.all()
     result = [quote_infos.serialize() for quote_infos in quote_infos]
+    return jsonify(result)
+
+
+# query to get quote by date..
+# Quote by date(single day) by get parameters ex. /quotes-by-date/?date=2023-06-22
+@quote_api_blueprint.route('/quotes-by-date/', methods = ['GET'])
+def getAllQuoteByDate():
+    quotes = Quote.query.filter(func.date(Quote.quote_date)==request.args.get('date') ).all()
+    result = [quote.serialize() for quote in quotes]
     return jsonify(result)
