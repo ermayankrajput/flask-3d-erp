@@ -1,4 +1,4 @@
-from flask import Blueprint, abort, request,jsonify
+from flask import Blueprint, Response, abort, request,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime,date
 from database.database_models import Quote,QuoteInfo,UnitQuote,app, db
@@ -153,3 +153,23 @@ def getQuoteInfo(quote_info_id):
 def getQuote(quote_id):
     quote = Quote.query.get(quote_id)
     return jsonify(quote.serialize())
+
+
+@quote_api_blueprint.route('/quotes/', methods = ['GET'])
+def getAllQuote():
+    quotes = Quote.query.all()
+    result = [quote.serialize() for quote in quotes]
+    return jsonify(result)
+
+@quote_api_blueprint.route('/unit-quotes/', methods = ['GET'])
+def getAllUnitQuote():
+    unit_quotes = UnitQuote.query.all()
+    result = [unit_quotes.serialize() for unit_quotes in unit_quotes]
+    return jsonify(result)
+
+
+@quote_api_blueprint.route('/quote-infos/', methods = ['GET'])
+def getAllQuoteInfo():
+    quote_infos = QuoteInfo.query.all()
+    result = [quote_infos.serialize() for quote_infos in quote_infos]
+    return jsonify(result)
