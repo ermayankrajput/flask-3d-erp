@@ -5,8 +5,6 @@ from flask_migrate import Migrate
 from sqlalchemy.sql import func
 from app import db
 
-migrate = Migrate(db, compare_type=True)
-
 database_models_blueprint = Blueprint('database_models_blueprint', __name__)
 
 class Quote(db.Model):

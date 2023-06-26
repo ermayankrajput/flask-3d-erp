@@ -5,6 +5,7 @@ import os
 # from multiprocessing import Process
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from flask_migrate import Migrate
 # import multiprocessing
 # from streamlit import caching
 
@@ -17,6 +18,7 @@ app = Flask(__name__, static_folder='uploads')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+migrate = Migrate(app, db, compare_type=True)
 
 @app.after_request
 def add_header(r):
