@@ -3,7 +3,7 @@ from flask import Flask, abort,jsonify, request ,Blueprint, send_from_directory
 import os
 # from flask_migrate import Migrate
 # from multiprocessing import Process
-
+from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 # import multiprocessing
 # from streamlit import caching
@@ -14,9 +14,9 @@ import trimesh
 
 # app = Flask(__name__, static_folder='transported')
 app = Flask(__name__, static_folder='uploads')
-print(app.static_folder)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
 @app.after_request
 def add_header(r):
@@ -35,8 +35,8 @@ def add_header(r):
 from converted.conv import conv_blueprint
 app.register_blueprint(conv_blueprint)
 
-from database.database_models import database_models_blueprint
-app.register_blueprint(database_models_blueprint)
+# from database.database_models import database_models_blueprint
+# app.register_blueprint(database_models_blueprint)
 
 from quote.quote_api import quote_api_blueprint
 app.register_blueprint(quote_api_blueprint)
