@@ -8,6 +8,7 @@ from app import db
 import multiprocessing
 from mesh_converter import meshRun
 import json
+import os
 
 
 quote_api_blueprint = Blueprint('quote_api_blueprint', __name__)
@@ -19,6 +20,8 @@ def upload3dFile():
     file = request.files["file"]
     uniqueFileName = str(datetime.now().timestamp()).replace(".","")
     uTimeDate = str(uniqueFileName)
+    if not os.path.exists('uploads'):
+        os.makedirs('uploads')
     file.save(f"uploads/{uniqueFileName+file.filename}")
     fileServerPath = 'uploads/'+uTimeDate+file.filename
     ret = {'foo': False, "converted_file": ""}
