@@ -3,7 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime,date
 
 from sqlalchemy import func
-from database.database_models import Quote,QuoteInfo,UnitQuote,db
+from database.database_models import Quote,QuoteInfo,UnitQuote, db
+from app import db
 import multiprocessing
 from mesh_converter import meshRun
 import json

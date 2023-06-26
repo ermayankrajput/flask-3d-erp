@@ -3,9 +3,9 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from flask_migrate import Migrate
 from sqlalchemy.sql import func
-from app import app
-db = SQLAlchemy(app)
-migrate = Migrate(app, db, compare_type=True)
+from app import db
+
+migrate = Migrate(db, compare_type=True)
 
 database_models_blueprint = Blueprint('database_models_blueprint', __name__)
 
@@ -87,8 +87,8 @@ class UnitQuote(db.Model):
                 "lead_time": self.lead_time
             }
 
-with app.app_context():
-    db.create_all()
+# with db.app_context():
+#     db.create_all()
 
 
     
