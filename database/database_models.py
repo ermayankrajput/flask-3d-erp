@@ -58,12 +58,14 @@ class QuoteInfo(db.Model):
                 "image_file": self.image_file,
                 "uploded_file" : self.uploded_file,
                 "transported_file":self.transported_file,
+                "material_search":self.material_search,
                 "technique": self.technique,
                 "finishing" : self.finishing,
                 "x_size" : self.x_size,
                 "y_size": self.y_size,
                 "z_size":self.z_size,
-                "unit_quotes": unit_quotes
+                "unit_quotes": unit_quotes,
+                
             }
     
 

@@ -27,16 +27,17 @@ def add_header(r):
     r.headers["Expires"] = "0"
     r.headers['Cache-Control'] = 'public, max-age=0'
     r.headers['Access-Control-Allow-Origin'] = '*'
+    r.headers['Access-Control-Allow-Methods'] = '*'
     return r
 
 if __name__ == '__main__':
     app.run()
 
 
-@app.errorhandler(404)
-def page_not_found(e):
-    # note that we set the 404 status explicitly
-    return "Error"
+# @app.errorhandler(404)
+# def page_not_found(e):
+#     # note that we set the 404 status explicitly
+#     return "Error"
 # db = SQLAlchemy(app)
 # migrate = Migrate(app, db)
 # caching.clear_cache()

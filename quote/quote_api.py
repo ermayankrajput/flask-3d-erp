@@ -24,7 +24,7 @@ def upload3dFile():
         os.makedirs('uploads')
     file.save(f"uploads/{uniqueFileName+file.filename}")
     fileServerPath = 'uploads/'+uTimeDate+file.filename
-    ret = {'foo': False, "converted_file": ""}
+    ret = {'success': False, "converted_file": "", "image": "", "x":"", "y":"", "z": ""}
     queue = multiprocessing.Queue()
     queue.put(ret)
     p = multiprocessing.Process(target=meshRun, args=(queue,fileServerPath,))
@@ -33,7 +33,9 @@ def upload3dFile():
     queueInfo  = queue.get()
     updated_file = f"uploads/{uniqueFileName+file.filename}"
     transported_file = queueInfo['converted_file']
-    return jsonify({"Success":True,"updated_file":updated_file,"transported_file":transported_file})
+    return jsonify({"Success":True,"updated_file":updated_file,"transported_file":transported_file, "image": queueInfo['image'], "x":queueInfo['x'],"y":queueInfo['y'],"z":queueInfo['z']})
+
+
 # POST Request
 
 
@@ -87,11 +89,16 @@ def createQuoteInfo(quote_id):
         return jsonify(quoteinfo.serialize())
     
 
-# API belong to create unit quote..
+
+# Endpoint belong to create unit quote..
 # need  to create unit quote data only..
+# Example : /quote-info/6/create-unit-quote
+# in json form
+# { "unit_price":  ....,
+#  "lead_time": ........
+# }
 
-
-@quote_api_blueprint.route('/unit-quote/<int:quote_info_id>/create-unit-quote', methods = ['POST'])
+@quote_api_blueprint.route('/quote-info/<int:quote_info_id>/create-unit-quote', methods = ['POST'])
 def createUnitQuote(quote_info_id):
     quoteInfo = QuoteInfo.query.get(quote_info_id)
     # quote_infoid = request.get_json().get('quote_info_id')
@@ -106,9 +113,14 @@ def createUnitQuote(quote_info_id):
 
 # UPDATE REQUEST...
 
-# API belong to update unit-quote..
+# Endpoint belong to update unit-quote..
 # need unit-quote id and to change data..
+# Example-: /unit-quote/
 # in json form
+# {"id":1,
+#   "unit_price": ....
+# }
+
 
 @quote_api_blueprint.route('/unit-quote/', methods = ['PATCH'])
 def updateUnitQuote():
@@ -122,9 +134,14 @@ def updateUnitQuote():
         db.session.commit()
         return jsonify(unit_quote.serialize())
 
-# API belong to update quote-info..
+# Endpoint belong to update quote-info..
 # need quote-info id and to change data..
+# Example-: /quote-info/
 # in json form
+#{"id": 4
+#  "uploded_file": ....
+# }
+
 
 @quote_api_blueprint.route('/quote-info/', methods = ['PATCH'])
 def updateQuoteInfo():
@@ -137,9 +154,15 @@ def updateQuoteInfo():
         return jsonify(quote_info.serialize())
 
 
-# API belong to update quote..
+# Endpoint belong to update quote..
 # need quote id and to change data..
+# Example-: /quote/
 # in json form
+#{"id": 4,
+# "shipping_cost" : .....,
+# }
+#
+#
 
 @quote_api_blueprint.route('/quote/', methods = ['PATCH'])
 def updateQuote():
@@ -155,9 +178,13 @@ def updateQuote():
 #DELETE REQUEST
 
 
-# API belong to update unit-quote..
+# Endpoint belong to update unit-quote..
 # need unit-quote id and to delete data..
+# ex- /unit-quote/
 # in json form
+#{
+# "id":5,
+# }
 
 @quote_api_blueprint.route("/unit-quote/", methods = ["DELETE"])
 def deleteUnitQuote():
@@ -167,9 +194,13 @@ def deleteUnitQuote():
     return jsonify({"success":False, "response": "Unit Quote ID: "+ str(request.json["id"]) +" Not Found"})
 
 
-# API belong to update quote-info..
+# Endpoint belong to update quote-info..
 # need quote-info id and to delete data..
+# ex- /quote-info/
 # in json form
+#{
+# "id":6
+# }
 
 @quote_api_blueprint.route("/quote-info/", methods = ["DELETE"])
 def deleteQuoteInfo():
@@ -179,10 +210,13 @@ def deleteQuoteInfo():
     return jsonify({"success":False, "response": "Quote Info ID: "+ str(request.json["id"]) +" Not Found"})
 
 
-# API belong to update quote..
+# Endpoint belong to update quote..
 # need quote id and to delete data..
+# ex- /quote/
 # in json form
-
+#{
+# "id":9
+# }
 @quote_api_blueprint.route("/quote/", methods = ["DELETE"])
 def deleteQuote():
     if Quote.query.filter_by(id=request.json["id"]).delete():
@@ -193,7 +227,7 @@ def deleteQuote():
 #GET REQUEST
 
 
-# API belong to Get unit-quote..
+# Endpoint belong to Get unit-quote..
 # need unit-quote id to get quote in url..
 
 
@@ -202,7 +236,7 @@ def getUnitQuote(unit_quote_id):
     unit_quote = UnitQuote.query.get(unit_quote_id)
     return jsonify(unit_quote.serialize())
 
-# API belong to Get quote-info..
+# Endpoint belong to Get quote-info..
 # need quote-info id to get quote in url..
 
 @quote_api_blueprint.route('/quote-info/<int:quote_info_id>', methods = ['GET'])
@@ -211,7 +245,7 @@ def getQuoteInfo(quote_info_id):
     return jsonify(quote_info.serialize())
 
 
-# API belong to Get quote..
+# Endpoint belong to Get quote..
 # need quote id to get quote in url.. ex: /quote/19
 @quote_api_blueprint.route('/quote/<int:quote_id>', methods = ['GET'])
 def getQuote(quote_id):
@@ -238,7 +272,7 @@ def getAllQuoteInfo():
     result = [quote_infos.serialize() for quote_infos in quote_infos]
     return jsonify(result)
 
-
+# Endpoint
 # query to get quote by date..
 # Quote by date(single day) by get parameters ex. /quotes-by-date/?date=2023-06-22
 @quote_api_blueprint.route('/quotes-by-date/', methods = ['GET'])
