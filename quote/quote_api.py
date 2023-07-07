@@ -4,7 +4,7 @@ from datetime import datetime,date
 
 from sqlalchemy import func
 from database.database_models import Quote,QuoteInfo,UnitQuote, db
-from app import db
+# from app import db
 import multiprocessing
 from mesh_converter import meshRun
 import json
@@ -252,6 +252,8 @@ def getQuote(quote_id):
     quote = Quote.query.get(quote_id)
     return jsonify(quote.serialize())
 
+
+# Endpoint belong to Get all quote
 
 @quote_api_blueprint.route('/quotes/', methods = ['GET'])
 def getAllQuotes():

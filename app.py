@@ -9,6 +9,7 @@ from flask_migrate import Migrate
 # import multiprocessing
 # from streamlit import caching
 
+
 import trimesh
 
 # from mesh_converter import meshRun
@@ -19,6 +20,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db, compare_type=True)
+
 
 @app.after_request
 def add_header(r):
@@ -53,6 +55,8 @@ app.register_blueprint(conv_blueprint)
 from quote.quote_api import quote_api_blueprint
 app.register_blueprint(quote_api_blueprint)
 
+from users_api import user_api_blueprint
+app.register_blueprint(user_api_blueprint)
 # class quote(db.model):
 #     id = db.Column(db.Integer, primary_key=True)
 #     date = db.Column(db.date,nullable = False)
