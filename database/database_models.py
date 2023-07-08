@@ -1,9 +1,14 @@
-from flask import Blueprint
+from functools import wraps
+from flask import Blueprint, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from flask_migrate import Migrate
+import jwt
 from sqlalchemy.sql import func
 from app import db
+from flask_login import LoginManager, login_manager, login_user
+from flask_security import Security, SQLAlchemySessionUserDatastore
+# from flask_security import UserMixin, RoleMixin
 
 database_models_blueprint = Blueprint('database_models_blueprint', __name__)
 
@@ -87,8 +92,78 @@ class UnitQuote(db.Model):
                 "lead_time": self.lead_time
             }
 
+
+# create table in database for storing users.....
+
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    status = db.Column(db.Integer(), nullable=False, server_default='1')
+    age = db.Column(db.Integer,nullable = True)
+    email = db.Column(db.String(255), nullable=False, unique=True)
+    email_confirmed_at = db.Column(db.DateTime())
+    password = db.Column(db.String(255), nullable=False, server_default='')
+    first_name = db.Column(db.String(100), nullable=False, server_default='')
+    last_name = db.Column(db.String(100), nullable=False, server_default='')
+    role_id = db.Column(db.Integer(), db.ForeignKey('roles.id', ondelete='CASCADE'))
+    roles = db.relationship('Role', backref= 'User')
+
+
+    def __repr__(self):
+        return "<User %r>" % self.email
+    
+
+    def serialize(self):
+        # role = None
+        # if self.role:
+        #     role = [role.serialize() for role in self.role] 
+
+        return{"id":self.id,
+               "status":self.status,
+               "age":self.age,
+               "email":self.email,
+               "email_confirmed_at":self.email_confirmed_at,
+               "first_name":self.first_name,
+               "last_name":self.last_name,
+               "role":self.roles.serialize()
+        }
+    
+
+
+
+
+# create table in database for storing roles
+
+# class Role(db.Model):
+#     __tablename__ = 'roles'
+#     id = db.Column(db.Integer(), primary_key=True)
+#     name = db.Column(db.String(50), unique=True)
+
+
+# create table in database for assigning roles
+
+class Role(db.Model):
+    __tablename__ = 'roles'
+    id = db.Column(db.Integer(), primary_key=True)
+    # id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(50), unique=True)
+    status = db.Column(db.Integer(), nullable=False, server_default='1')
+    created_at = db.Column(db.DateTime(timezone=True), default=func.now())
+    updated_at = db.Column(db.DateTime(timezone=True), default=func.now()) 
+    # user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete='CASCADE'))
+    # role_id = db.Column(db.Integer(), db.ForeignKey('roles.id', ondelete='CASCADE'))
+
+    def __repr__(self):
+        return "<Role %r>" % self.name
+
+    def serialize(self):
+        return{"id":self.id,
+               "name":self.name,
+               "status":self.status,
+            #    "created_at":self.created_at,
+            #    "updated_at":self.updated_at
+        }
+
 # with db.app_context():
 #     db.create_all()
 
-
-    

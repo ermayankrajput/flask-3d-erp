@@ -4,12 +4,12 @@ from datetime import datetime,date
 
 from sqlalchemy import func
 from database.database_models import Quote,QuoteInfo,UnitQuote, db
-from app import db
+# from app import db
 import multiprocessing
 from mesh_converter import meshRun
 import json
 import os
-
+import requests
 
 quote_api_blueprint = Blueprint('quote_api_blueprint', __name__)
 
@@ -18,6 +18,9 @@ def upload3dFile():
     # breakpoint()
     # POST Request File
     file = request.files["file"]
+    # url = "https://wordpress-311437-2997507.cloudwaysapps.com/x-file/test.stp"
+    # r = requests.get(url)
+    # file = r.content
     uniqueFileName = str(datetime.now().timestamp()).replace(".","")
     uTimeDate = str(uniqueFileName)
     if not os.path.exists('uploads'):
@@ -252,6 +255,8 @@ def getQuote(quote_id):
     quote = Quote.query.get(quote_id)
     return jsonify(quote.serialize())
 
+
+# Endpoint belong to Get all quote
 
 @quote_api_blueprint.route('/quotes/', methods = ['GET'])
 def getAllQuotes():
