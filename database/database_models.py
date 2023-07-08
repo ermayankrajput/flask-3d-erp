@@ -3,11 +3,11 @@ from flask import Blueprint, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from flask_migrate import Migrate
-import jwt
+# import jwt
 from sqlalchemy.sql import func
 from app import db
-from flask_login import LoginManager, login_manager, login_user
-from flask_security import Security, SQLAlchemySessionUserDatastore
+# from flask_login import LoginManager, login_manager, login_user
+# from flask_security import Security, SQLAlchemySessionUserDatastore
 # from flask_security import UserMixin, RoleMixin
 
 database_models_blueprint = Blueprint('database_models_blueprint', __name__)
