@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from flask import abort, jsonify, make_response, request,Blueprint
-from flask_login import login_user
+# from flask_login import login_user
 import jwt
 from  werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
