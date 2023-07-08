@@ -10,6 +10,7 @@ from mesh_converter import meshRun
 import json
 import os
 import requests
+import time
 
 quote_api_blueprint = Blueprint('quote_api_blueprint', __name__)
 
@@ -27,6 +28,11 @@ def upload3dFile():
         os.makedirs('uploads')
     file.save(f"uploads/{uniqueFileName+file.filename}")
     fileServerPath = 'uploads/'+uTimeDate+file.filename
+    while not os.path.exists(fileServerPath):
+        print('not saved yet')
+        time.sleep(1)
+    if not os.path.isfile(fileServerPath):
+        return "not saved anyhow"
     ret = {'success': False, "converted_file": "", "image": "", "x":"", "y":"", "z": ""}
     queue = multiprocessing.Queue()
     queue.put(ret)
