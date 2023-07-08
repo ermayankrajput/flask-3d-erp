@@ -9,7 +9,7 @@ import multiprocessing
 from mesh_converter import meshRun
 import json
 import os
-
+import requests
 
 quote_api_blueprint = Blueprint('quote_api_blueprint', __name__)
 
@@ -18,6 +18,9 @@ def upload3dFile():
     # breakpoint()
     # POST Request File
     file = request.files["file"]
+    # url = "https://wordpress-311437-2997507.cloudwaysapps.com/x-file/test.stp"
+    # r = requests.get(url)
+    # file = r.content
     uniqueFileName = str(datetime.now().timestamp()).replace(".","")
     uTimeDate = str(uniqueFileName)
     if not os.path.exists('uploads'):

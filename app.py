@@ -1,3 +1,4 @@
+from functools import wraps
 from flask import Flask, abort,jsonify, request ,Blueprint, send_from_directory
 # from flask_sqlalchemy import SQLAlchemy
 import os
@@ -6,11 +7,14 @@ import os
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from flask_migrate import Migrate
+import jwt
 # import multiprocessing
 # from streamlit import caching
 
 
 import trimesh
+
+
 
 # from mesh_converter import meshRun
 
@@ -18,10 +22,35 @@ import trimesh
 app = Flask(__name__, static_folder='uploads')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = '128566299290685828278054891499021371965'
 db = SQLAlchemy(app)
 migrate = Migrate(app, db, compare_type=True)
 
-
+from database.database_models import User
+# decorator factory which invoks update_wrapper() method and passes decorated function as an argument
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        # jwt is passed in the request header
+        if 'x-access-token' in request.headers:
+            token = request.headers['x-access-token']
+        # return 401 if token is not passed
+        if not token:
+            return jsonify({'message' : 'Token is missing !!'}), 401
+  
+        try:
+            # decoding the payload to fetch the stored details
+            data = jwt.decode(token, app.config['SECRET_KEY'])
+            current_user = User.query.filter_by(public_id = data['public_id']).first()
+        except:
+            return jsonify({
+                'message' : 'Token is invalid !!'
+            }), 401
+        # returns the current logged in users context to the routes
+        return  f(current_user, *args, **kwargs)
+  
+    return decorated
 @app.after_request
 def add_header(r):
     r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"

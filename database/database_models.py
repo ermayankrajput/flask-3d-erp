@@ -1,7 +1,9 @@
-from flask import Blueprint
+from functools import wraps
+from flask import Blueprint, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from flask_migrate import Migrate
+import jwt
 from sqlalchemy.sql import func
 from app import db
 from flask_login import LoginManager, login_manager, login_user
@@ -125,6 +127,8 @@ class User(db.Model):
                "last_name":self.last_name,
                "role":self.roles.serialize()
         }
+    
+
 
 
 
@@ -162,3 +166,4 @@ class Role(db.Model):
 
 # with db.app_context():
 #     db.create_all()
+
