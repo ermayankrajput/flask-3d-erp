@@ -33,6 +33,7 @@ def upload3dFile():
         time.sleep(1)
     if not os.path.isfile(fileServerPath):
         return "not saved anyhow"
+    file.close()
     os.chmod(fileServerPath, 0o777)
     ret = {'success': False, "converted_file": "", "image": "", "x":"", "y":"", "z": ""}
     queue = multiprocessing.Queue()
