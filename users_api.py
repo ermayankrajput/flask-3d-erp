@@ -21,7 +21,7 @@ def sign_up(role_id):
     if user:
         msg="User already exist"
         return msg 
-    user = User(email='this@gmaigh5.com', status=1,first_name= 'lol',last_name= 'ji',email_confirmed_at= str(datetime.now()), password='password',age = 34,role_id=role.id)
+    user = User(email='this@gmaill.com', status=1,first_name= 'lol',last_name= 'ji',email_confirmed_at= str(datetime.now()), password='pass123',age = 34,role_id=role.id)
     db.session.add(user)
     db.session.commit()
     return jsonify(user.serialize())
