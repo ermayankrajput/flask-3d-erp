@@ -6,6 +6,10 @@ import requests
 
 def meshRun(queue,fileServerPath):
     print(fileServerPath)
+    if os.path.isfile(fileServerPath):
+        print("file is saved here")
+    else:
+        print("file not saved here")
     fileNameSplit = fileServerPath.split("/")    
     FileMainName = fileNameSplit[len(fileNameSplit)-1]
     splitFile = FileMainName.split(".")
