@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime,date
 
 from sqlalchemy import func
+# from auth_middleware import token_required
 from database.database_models import Quote,QuoteInfo,UnitQuote, db
 # from app import db
 import multiprocessing
@@ -59,8 +60,8 @@ def createQuote():
     #     }
     # }
 
-    updated_file = request.get_json().get('files')['updated_file'] 
-    transported_file = request.get_json().get('files')['transported_file']
+    updated_file = request.get_json().get('updated_file')
+    transported_file = request.get_json().get('transported_file')
     quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None)
     db.session.add(quote)
     db.session.commit()
