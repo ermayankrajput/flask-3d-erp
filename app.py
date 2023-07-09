@@ -63,8 +63,8 @@ app.register_blueprint(conv_blueprint)
 from quote.quote_api import quote_api_blueprint
 app.register_blueprint(quote_api_blueprint)
 
-# from users_api import user_api_blueprint
-# app.register_blueprint(user_api_blueprint)
+from users_api import user_api_blueprint
+app.register_blueprint(user_api_blueprint)
 # class quote(db.model):
 #     id = db.Column(db.Integer, primary_key=True)
 #     date = db.Column(db.date,nullable = False)
