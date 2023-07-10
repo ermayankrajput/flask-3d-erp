@@ -35,7 +35,7 @@ def meshRun(queue,fileServerPath):
     dimensions = stlToImg('uploads/transported/'+FileMainName+'.stl', 'uploads/images/'+FileMainName+'.stl.png')
     # print("Dimesions stltojpg ", dimensions)
     ret['converted_file'] = 'uploads/transported/'+FileMainName+'.stl'
-    ret['image'] = 'uploads/images/'+FileMainName+'.stl.png'
+    ret['image_file'] = 'uploads/images/'+FileMainName+'.stl.png'
     ret['x'] = str(dimensions.get("x"))
     ret['y'] = str(dimensions.get("y"))
     ret['z'] = str(dimensions.get("z"))

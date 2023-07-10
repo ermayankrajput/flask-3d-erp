@@ -36,7 +36,7 @@ def upload3dFile():
         return "not saved anyhow"
     file.close()
     os.chmod(fileServerPath, 0o777)
-    ret = {'success': False, "converted_file": "", "image": "", "x":"", "y":"", "z": ""}
+    ret = {'success': False, "converted_file": "", "image_file": "", "x":"", "y":"", "z": ""}
     queue = multiprocessing.Queue()
     queue.put(ret)
     p = multiprocessing.Process(target=meshRun, args=(queue,fileServerPath,))
@@ -45,7 +45,7 @@ def upload3dFile():
     queueInfo  = queue.get()
     uploaded_file = f"uploads/{uniqueFileName+file.filename}"
     transported_file = queueInfo['converted_file']
-    return jsonify({"Success":True,"uploded_file":uploaded_file,"transported_file":transported_file, "image": queueInfo['image'], "x":queueInfo['x'],"y":queueInfo['y'],"z":queueInfo['z']})
+    return jsonify({"Success":True,"uploded_file":uploaded_file,"transported_file":transported_file, "image_file": queueInfo['image_file'], "x":queueInfo['x'],"y":queueInfo['y'],"z":queueInfo['z']})
 
 
 # POST Request
@@ -65,7 +65,7 @@ def createQuote():
     quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None)
     db.session.add(quote)
     db.session.commit()
-    quoteinfo = QuoteInfo(uploded_file = uploaded_file,transported_file = transported_file ,material_search = None,technique = None,finishing = None,x_size = request.get_json().get('x'),y_size= request.get_json().get('y'),z_size = request.get_json().get('z'),quote_id = quote.id,image_file=request.get_json().get('image'))
+    quoteinfo = QuoteInfo(uploded_file = uploaded_file,transported_file = transported_file ,material_search = None,technique = None,finishing = None,x_size = request.get_json().get('x'),y_size= request.get_json().get('y'),z_size = request.get_json().get('z'),quote_id = quote.id,image_file=request.get_json().get('image_file'))
     db.session.add(quoteinfo)
     db.session.commit()
     unitquote = UnitQuote(unit_price = None,quantity = None,lead_time=None,quote_info_id=quoteinfo.id)
@@ -92,7 +92,7 @@ def createQuoteInfo(quote_id):
     else:
         uploaded_file = request.get_json().get('uploaded_file') 
         transported_file = request.get_json().get('transported_file')
-        quoteinfo = QuoteInfo(uploded_file = uploaded_file,transported_file = transported_file, material_search = request.get_json().get('material_search'), technique = request.get_json().get('technique'), finishing = request.get_json().get('finishing'), x_size = request.get_json().get('x'),y_size= request.get_json().get('y'),z_size = request.get_json().get('z'),quote_id = quote_id,image_file=request.get_json().get('image'))
+        quoteinfo = QuoteInfo(uploded_file = uploaded_file,transported_file = transported_file, material_search = request.get_json().get('material_search'), technique = request.get_json().get('technique'), finishing = request.get_json().get('finishing'), x_size = request.get_json().get('x'),y_size= request.get_json().get('y'),z_size = request.get_json().get('z'),quote_id = quote_id,image_file=request.get_json().get('image_file'))
         db.session.add(quoteinfo)
         db.session.commit()
         unitquote = UnitQuote(unit_price = None,quantity = None,lead_time=None,quote_info_id=quoteinfo.id)
