@@ -30,12 +30,12 @@ def meshRun(queue,fileServerPath):
     if not os.path.exists('uploads/transported'):
         os.makedirs('uploads/transported')
     # Export the new mesh in the STL format
-    mesh.export('uploads/transported/'+FileMainName+'--demo1.stl')
+    mesh.export('uploads/transported/'+FileMainName+'.stl')
     # print("MESH CONVERTER", mesh.bounding_box())
-    dimensions = stlToImg('uploads/transported/'+FileMainName+'--demo1.stl', 'uploads/images/'+FileMainName+'.stl.png')
+    dimensions = stlToImg('uploads/transported/'+FileMainName+'.stl', 'uploads/images/'+FileMainName+'.stl.png')
     # print("Dimesions stltojpg ", dimensions)
-    ret['converted_file'] = 'uploads/transported/'+FileMainName+'--demo1.stl'
-    ret['image'] = 'uploads/images/'+FileMainName+'--demo1.stl.png'
+    ret['converted_file'] = 'uploads/transported/'+FileMainName+'.stl'
+    ret['image'] = 'uploads/images/'+FileMainName+'.stl.png'
     ret['x'] = str(dimensions.get("x"))
     ret['y'] = str(dimensions.get("y"))
     ret['z'] = str(dimensions.get("z"))
