@@ -12,17 +12,18 @@ import json
 import os
 import requests
 import time
+from stltojpg import stlToImg
 
 quote_api_blueprint = Blueprint('quote_api_blueprint', __name__)
 
 @quote_api_blueprint.route('/file-upload', methods = ['POST'])
 def upload3dFile():
-    # breakpoint()
-    # POST Request File
     file = request.files["file"]
-    # url = "https://wordpress-311437-2997507.cloudwaysapps.com/x-file/test.stp"
-    # r = requests.get(url)
-    # file = r.content
+    listExt = ["stp","STP","step","STEP","igs","IGS","iges","IGES","stl","STL"]
+    fileNameSplit = file.filename.split(".")
+    ext = fileNameSplit[len(fileNameSplit)-1]
+    if not ext in listExt:
+        return jsonify({"success": False, "message": "Invalid file type"})
     uniqueFileName = str(datetime.now().timestamp()).replace(".","")
     uTimeDate = str(uniqueFileName)
     if not os.path.exists('uploads'):
@@ -36,6 +37,9 @@ def upload3dFile():
         return "not saved anyhow"
     file.close()
     os.chmod(fileServerPath, 0o777)
+    if ext in ["stl", "STL"]:
+        dimensions = stlToImg(fileServerPath, fileServerPath+'.png')
+        return jsonify({"Success":True,"uploded_file":fileServerPath,"transported_file":fileServerPath, "image_file": fileServerPath+'.png', "x":str(dimensions.get("x")),"y":str(dimensions.get("y")),"z":str(dimensions.get("z"))})
     ret = {'success': False, "converted_file": "", "image_file": "", "x":"", "y":"", "z": ""}
     queue = multiprocessing.Queue()
     queue.put(ret)
