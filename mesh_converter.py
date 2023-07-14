@@ -27,17 +27,17 @@ def meshRun(queue,fileServerPath):
     # print("Mesh Bounding Box volume: ", mesh.bounding_box_oriented.volume)
     print("Mesh Area: ")
 
-    if not os.path.exists('uploads/transported'):
-        os.makedirs('uploads/transported')
+    if not os.path.exists('uploads'):
+        os.makedirs('uploads')
     # Export the new mesh in the STL format
-    mesh.export('uploads/transported/'+FileMainName+'.stl')
+    mesh.export('uploads/'+FileMainName+'.stl')
     # print("MESH CONVERTER", mesh.bounding_box())
-    dimensions = stlToImg('uploads/transported/'+FileMainName+'.stl', 'uploads/images/'+FileMainName+'.stl.png')
+    # dimensions = stlToImg('uploads/transported/'+FileMainName+'.stl', 'uploads/images/'+FileMainName+'.stl.png')
     # print("Dimesions stltojpg ", dimensions)
-    ret['converted_file'] = 'uploads/transported/'+FileMainName+'.stl'
-    ret['image_file'] = 'uploads/images/'+FileMainName+'.stl.png'
-    ret['x'] = str(dimensions.get("x"))
-    ret['y'] = str(dimensions.get("y"))
-    ret['z'] = str(dimensions.get("z"))
+    ret['converted_file'] = 'uploads/'+FileMainName+'.stl'
+    # ret['image_file'] = 'uploads/images/'+FileMainName+'.stl.png'
+    # ret['x'] = str(dimensions.get("x"))
+    # ret['y'] = str(dimensions.get("y"))
+    # ret['z'] = str(dimensions.get("z"))
     ret['sucess'] = True
     queue.put(ret)
