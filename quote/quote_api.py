@@ -1,7 +1,6 @@
 from flask import Blueprint, Response, abort, request,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime,date
-
 from sqlalchemy import func
 # from auth_middleware import token_required
 from database.database_models import Quote,QuoteInfo,UnitQuote, db
@@ -13,6 +12,7 @@ import os
 import requests
 import time
 from stltojpg import stlToImg
+from s3_upload import s3_upload
 
 quote_api_blueprint = Blueprint('quote_api_blueprint', __name__)
 
@@ -28,7 +28,8 @@ def upload3dFile():
     uTimeDate = str(uniqueFileName)
     if not os.path.exists('uploads'):
         os.makedirs('uploads')
-    file.save(f"uploads/{uniqueFileName+file.filename}")
+    newFileName = uniqueFileName+file.filename
+    file.save(f"uploads/{newFileName}")
     fileServerPath = 'uploads/'+uTimeDate+file.filename
     while not os.path.exists(fileServerPath):
         print('not saved yet')
@@ -37,19 +38,26 @@ def upload3dFile():
         return "not saved anyhow"
     file.close()
     os.chmod(fileServerPath, 0o777)
+    s3UploadedFile = s3_upload(fileServerPath, newFileName)
+    if ext not in ["stl", "STL"]:
+        ret = {'success': False, "converted_file": ""}
+        queue = multiprocessing.Queue()
+        queue.put(ret)
+        p = multiprocessing.Process(target=meshRun, args=(queue,fileServerPath,))
+        p.start()
+        p.join()
+        queueInfo  = queue.get()
+        transported_file = queueInfo['converted_file']
     if ext in ["stl", "STL"]:
-        dimensions = stlToImg(fileServerPath, fileServerPath+'.png')
-        return jsonify({"Success":True,"uploded_file":fileServerPath,"transported_file":fileServerPath, "image_file": fileServerPath+'.png', "x":str(dimensions.get("x")),"y":str(dimensions.get("y")),"z":str(dimensions.get("z"))})
-    ret = {'success': False, "converted_file": "", "image_file": "", "x":"", "y":"", "z": ""}
-    queue = multiprocessing.Queue()
-    queue.put(ret)
-    p = multiprocessing.Process(target=meshRun, args=(queue,fileServerPath,))
-    p.start()
-    p.join()
-    queueInfo  = queue.get()
-    uploaded_file = f"uploads/{uniqueFileName+file.filename}"
-    transported_file = queueInfo['converted_file']
-    return jsonify({"Success":True,"uploded_file":uploaded_file,"transported_file":transported_file, "image_file": queueInfo['image_file'], "x":queueInfo['x'],"y":queueInfo['y'],"z":queueInfo['z']})
+        transported_file = 'uploads/'+uTimeDate+file.filename
+        s3TransportedFile = s3UploadedFile
+    else:
+        s3TransportedFile = s3_upload(transported_file, newFileName+'.stl')
+    dimensions = stlToImg(transported_file, transported_file+'.png')
+    s3ImageFile = s3_upload(transported_file+'.png', newFileName+'.png')
+    for f in os.listdir('uploads'):
+        os.remove(os.path.join('uploads', f))
+    return jsonify({"Success":True,"uploded_file":s3UploadedFile,"transported_file":s3TransportedFile, "image_file": s3ImageFile, "x":str(dimensions.get("x")),"y":str(dimensions.get("y")),"z":str(dimensions.get("z"))})
 
 
 # POST Request
