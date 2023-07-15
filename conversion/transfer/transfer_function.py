@@ -34,7 +34,7 @@ import os
 import cadexchanger.CadExCore as cadex
 
 sys.path.append(os.path.abspath(os.path.dirname(Path(__file__).resolve()) + r"/../../"))
-
+import cadex_license as license
 
 def main_my(theSource = 'abc.stp'):
     fileNameSplit = theSource.split("/")
@@ -43,8 +43,9 @@ def main_my(theSource = 'abc.stp'):
     splitFileFirstName = splitFile[len(splitFile)-2]
     # breakpoint()
 
-    anAbsolutePathToRuntimeKey = os.path.abspath(os.path.dirname(Path(__file__).resolve()) + r"/runtime_key.lic")
-    if not cadex.LicenseManager.CADExLicense_ActivateRuntimeKeyFromAbsolutePath(anAbsolutePathToRuntimeKey):
+    aKey = license.Value()
+
+    if not cadex.LicenseManager.Activate(aKey):
         print("Failed to activate CAD Exchanger license.")
         return 1
 
@@ -59,26 +60,17 @@ def main_my(theSource = 'abc.stp'):
 
     aWriter = cadex.ModelData_ModelWriter()
     # Converting and writing the model to file
-    if not os.path.exists('uploads/transported'):
-        os.makedirs('uploads/transported')
-
-    if not os.path.exists('uploads/images'):
-        os.makedirs('uploads/images')
-
-    # if not aWriter.Write(aModel, cadex.Base_UTF16String('transported/'+splitFileFirstName+'.stl')):
-    #     print("Failed to convert and write the file to specified format ")
-
-    if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/transported/'+splitFileFirstName+'.stl')):
+    if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/'+splitFileFirstName+'.stl')):
         print("Failed to convert and write the file to specified format ")
         return 1
 
-    if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/images/'+splitFileFirstName+'.jpg')):
+    if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/'+splitFileFirstName+'.jpg')):
         print("Failed to convert and write the file to specified format ")
         return 1    
 
     print("Completed")
-    var = 'uploads/transported/'+splitFileFirstName+'.stl' 
-    var1 =  'uploads/images/'+splitFileFirstName+'.jpg'
+    var = 'uploads/'+splitFileFirstName+'.stl' 
+    var1 =  'uploads/'+splitFileFirstName+'.jpg'
     return var ,var1
 # breakpoint()
 

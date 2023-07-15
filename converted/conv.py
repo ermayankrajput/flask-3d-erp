@@ -37,7 +37,5 @@ def conversion():
     file.save(f"uploads/{uTimeDate+file.filename}")
     fileServerPath = 'uploads/'+uTimeDate+file.filename
     fileName = main_my(fileServerPath)
-    # splitFileN = fileName.split(",")
-    hostName = request.headers.get('Host')
-    # breakpoint()
-    return jsonify({"success": True, "file": hostName+'/'+fileName[0],"image":hostName+'/'+fileName[1]})
+    
+    return jsonify({"success": True,"uploded_file": fileServerPath, "transported_file": fileName[0],"image_file":fileName[1]})
