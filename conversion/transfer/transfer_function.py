@@ -50,17 +50,17 @@ def main_my(theSource = 'abc.stp', newFileName='abc.stp'):
     aReader = cadex.ModelData_ModelReader()
     # Opening and converting the file
     if not aReader.Read(cadex.Base_UTF16String(theSource), aModel):
-        print("Failed to open and convert the file " + theSource)
+        print("Failed to open and convert the file source" + theSource)
         return 1
 
     aWriter = cadex.ModelData_ModelWriter()
     # Converting and writing the model to file
     if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/'+newFileName+'.stl')):
-        print("Failed to convert and write the file to specified format ")
+        print("Failed to convert and write the file to specified format STL")
         return 1
 
     if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/'+newFileName+'.png')):
-        print("Failed to convert and write the file to specified format ")
+        print("Failed to convert and write the file to specified format PNG")
         return 1    
 
     print("Completed")
