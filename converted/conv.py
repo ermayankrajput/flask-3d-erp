@@ -11,6 +11,7 @@ sys.path.append("conversion/transfer")
 from transfer_function import main_my
 import socket
 import platform
+from s3_upload import s3_upload
 
 conv_blueprint = Blueprint('conv_blueprint', __name__)
 
@@ -34,8 +35,11 @@ def conversion():
     uTimeDate = str(uniqueFileName)
     if not os.path.exists('uploads'):
         os.makedirs('uploads')
-    file.save(f"uploads/{uTimeDate+file.filename}")
-    fileServerPath = 'uploads/'+uTimeDate+file.filename
-    fileName = main_my(fileServerPath)
-    
-    return jsonify({"success": True,"uploded_file": fileServerPath, "transported_file": fileName[0],"image_file":fileName[1]})
+    newFileName = uTimeDate+file.filename
+    file.save(f"uploads/{newFileName}")
+    fileServerPath = 'uploads/'+newFileName
+    cadexFiles = main_my(fileServerPath)
+    s3UploadedFile = s3_upload(fileServerPath, newFileName)
+    s3ImageFile = s3_upload(cadexFiles[1], newFileName + 'jpg')
+    s3TransportedFile = s3_upload(cadexFiles[0], newFileName + 'stl')
+    return jsonify({"success": True,"uploded_file": s3UploadedFile, "transported_file": s3TransportedFile,"image_file":s3ImageFile})
