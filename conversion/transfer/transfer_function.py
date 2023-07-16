@@ -36,12 +36,7 @@ import cadexchanger.CadExCore as cadex
 sys.path.append(os.path.abspath(os.path.dirname(Path(__file__).resolve()) + r"/../../"))
 import cadex_license as license
 
-def main_my(theSource = 'abc.stp'):
-    fileNameSplit = theSource.split("/")
-    FileMainName = fileNameSplit[len(fileNameSplit)-1]
-    splitFile = FileMainName.split(".")
-    splitFileFirstName = splitFile[len(splitFile)-2]
-    # breakpoint()
+def main_my(theSource = 'abc.stp', newFileName='abc.stp'):
 
     aKey = license.Value()
 
@@ -60,17 +55,17 @@ def main_my(theSource = 'abc.stp'):
 
     aWriter = cadex.ModelData_ModelWriter()
     # Converting and writing the model to file
-    if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/'+splitFileFirstName+'.stl')):
+    if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/'+newFileName+'.stl')):
         print("Failed to convert and write the file to specified format ")
         return 1
 
-    if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/'+splitFileFirstName+'.jpg')):
+    if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/'+newFileName+'.png')):
         print("Failed to convert and write the file to specified format ")
         return 1    
 
     print("Completed")
-    transportedFile = 'uploads/'+splitFileFirstName+'.stl' 
-    imageFile =  'uploads/'+splitFileFirstName+'.jpg'
+    transportedFile = 'uploads/'+newFileName+'.stl' 
+    imageFile =  'uploads/'+newFileName+'.png'
     return transportedFile, imageFile
 # breakpoint()
 
