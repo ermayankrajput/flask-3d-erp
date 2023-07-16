@@ -59,9 +59,9 @@ def main_my(theSource = 'abc.stp', newFileName='abc.stp'):
         print("Failed to convert and write the file to specified format STL")
         return 1
 
-    if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/'+newFileName+'.jpeg')):
-        print("Failed to convert and write the file to specified format jpeg")
-        return 1    
+    # if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/'+newFileName+'.jpeg')):
+    #     print("Failed to convert and write the file to specified format jpeg")
+    #     return 1    
 
     print("Completed")
     # transportedFile = 'uploads/'+newFileName+'.stl' 
