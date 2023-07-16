@@ -64,9 +64,9 @@ def main_my(theSource = 'abc.stp', newFileName='abc.stp'):
         return 1    
 
     print("Completed")
-    transportedFile = 'uploads/'+newFileName+'.stl' 
-    imageFile =  'uploads/'+newFileName+'.png'
-    return transportedFile, imageFile
+    # transportedFile = 'uploads/'+newFileName+'.stl' 
+    # imageFile =  'uploads/'+newFileName+'.png'
+    return True
 # breakpoint()
 
 # if __name__ == "__main__":
