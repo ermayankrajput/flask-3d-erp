@@ -30,7 +30,7 @@
 import sys
 from pathlib import Path
 import os
-
+from pdf2image import convert_from_path
 import cadexchanger.CadExCore as cadex
 
 sys.path.append(os.path.abspath(os.path.dirname(Path(__file__).resolve()) + r"/../../"))
@@ -62,6 +62,12 @@ def main_my(theSource = 'abc.stp', newFileName='abc.stp'):
     if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/'+newFileName+'.pdf')):
         print("Failed to convert and write the file to specified format pd")
         return 1    
+
+    image = convert_from_path('uploads/'+newFileName+'.pdf')
+    convert_from_path(image, output_folder='uploads')
+    pages = convert_from_path('uploads/'+newFileName+'.pdf' , 500)
+    for count, page in enumerate(pages):
+        page.save(f'uploads/'+newFileName+'.pdf.png', 'PNG')
 
     print("Completed")
     # transportedFile = 'uploads/'+newFileName+'.stl' 
