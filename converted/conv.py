@@ -40,6 +40,6 @@ def conversion():
     fileServerPath = 'uploads/'+newFileName
     # cadexFiles = main_my(fileServerPath, newFileName)
     s3UploadedFile = s3_upload(fileServerPath, newFileName)
-    s3ImageFile = s3_upload('uploads' + newFileName + '.png', newFileName + '.png')
+    s3ImageFile = s3_upload('uploads/' + newFileName + '.png', newFileName + '.png')
     s3TransportedFile = s3_upload('uploads/' + newFileName + '.stl', newFileName + '.stl')
     return jsonify({"success": True,"uploded_file": s3UploadedFile, "transported_file": newFileName + '.stl',"image_file": newFileName + '.png'})
