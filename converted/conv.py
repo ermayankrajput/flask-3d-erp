@@ -38,7 +38,7 @@ def conversion():
     newFileName = uTimeDate+file.filename
     file.save(f"uploads/{newFileName}")
     fileServerPath = 'uploads/'+newFileName
-    # cadexFiles = main_my(fileServerPath, newFileName)
+    cadexFiles = main_my(fileServerPath, newFileName)
     s3UploadedFile = s3_upload(fileServerPath, newFileName)
     s3ImageFile = s3_upload('uploads/' + newFileName + '.pdf.png', newFileName + '.pdf.png')
     s3TransportedFile = s3_upload('uploads/' + newFileName + '.stl', newFileName + '.stl')
