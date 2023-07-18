@@ -58,6 +58,10 @@ def main_my(theSource = 'abc.stp', newFileName='abc.stp'):
     if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/'+newFileName+'.stl')):
         print("Failed to convert and write the file to specified format STL")
         return 1
+    
+    if not aReader.Read(cadex.Base_UTF16String('uploads/'+newFileName+'.stl'), aModel):
+        print("Failed to open and convert the file source" + 'uploads/'+newFileName+'.stl')
+        return 1
 
     if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/'+newFileName+'.pdf')):
         print("Failed to convert and write the file to specified format pd")
