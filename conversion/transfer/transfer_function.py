@@ -63,7 +63,7 @@ def main_my(theSource = 'abc.stp', newFileName='abc.stp'):
         print("Failed to convert and write the file to specified format pd")
         return 1    
 
-    image = convert_from_path('uploads/'+newFileName+'.pdf')
+    # image = convert_from_path('uploads/'+newFileName+'.pdf')
     # convert_from_path(image, output_folder='uploads')
     pages = convert_from_path('uploads/'+newFileName+'.pdf' , 500)
     for count, page in enumerate(pages):
