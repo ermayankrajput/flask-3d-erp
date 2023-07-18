@@ -105,6 +105,7 @@ class User(db.Model):
     password = db.Column(db.String, nullable=False, server_default='')
     first_name = db.Column(db.String(100), nullable=False, server_default='')
     last_name = db.Column(db.String(100), nullable=False, server_default='')
+    token = db.Column(db.String(255), nullable=True, unique=True)
     role_id = db.Column(db.Integer(), db.ForeignKey('roles.id', ondelete='CASCADE'))
     roles = db.relationship('Role', backref= 'User')
 

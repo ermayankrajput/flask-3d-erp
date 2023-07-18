@@ -6,3 +6,6 @@ flaskenv/
 quote/__pycache__/quote_api.cpython-310.pyc
 *.stp
 *.stl
+uploads/
+*.pyc
+*.__pycache__
