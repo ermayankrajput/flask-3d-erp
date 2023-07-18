@@ -64,7 +64,7 @@ def main_my(theSource = 'abc.stp', newFileName='abc.stp'):
         return 1    
 
     image = convert_from_path('uploads/'+newFileName+'.pdf')
-    convert_from_path(image, output_folder='uploads')
+    # convert_from_path(image, output_folder='uploads')
     pages = convert_from_path('uploads/'+newFileName+'.pdf' , 500)
     for count, page in enumerate(pages):
         page.save(f'uploads/'+newFileName+'.pdf.png', 'PNG')
