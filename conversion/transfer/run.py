@@ -36,6 +36,6 @@ from  os.path import abspath, dirname
 from transfer import main
 
 aSource = abspath(dirname(Path(__file__).resolve()) + r"/../../models/omni_wheel.stp")
-aDest = abspath(dirname(Path(__file__).resolve()) + r"/omni_wheel.pdf")
+aDest = abspath(dirname(Path(__file__).resolve()) + r"/omni_wheel.svg")
 
 sys.exit(main(aSource, aDest))
