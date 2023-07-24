@@ -7,7 +7,8 @@
 * 6. Run Server:- flask run --host=0.0.0.0 --port=5000
 * 7. Run Gunicorn:- gunicorn --bind=0.0.0.0:5000 app:app
 * 8. nohup :- 
-* 9. Run XVFB for screen:- Xvfb :99 -screen 0 1024x768x16 & 
+* 9. Run XVFB for screen:- Xvfb :99 -screen 0 1024x768x16 &
+* 10. export DISPLAY: 99
 
 
 
