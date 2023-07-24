@@ -7,6 +7,7 @@ For Deployment
     5. Run Server:- flask run --host=0.0.0.0 --port=5000
     6. Run Gunicorn:- gunicorn --bind=0.0.0.0:5000 app:app
     7. nohup :- 
+    * 8. Run XVFB for screen:- Xvfb :99 -screen 0 1024x768x16 & 
 
 
 
