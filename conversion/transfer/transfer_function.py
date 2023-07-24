@@ -63,15 +63,15 @@ def main_my(theSource = 'abc.stp', newFileName='abc.stp'):
         print("Failed to open and convert the file source" + 'uploads/'+newFileName+'.stl')
         return 1
 
-    if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/'+newFileName+'.pdf')):
+    if not aWriter.Write(aModel, cadex.Base_UTF16String('uploads/'+newFileName+'.png')):
         print("Failed to convert and write the file to specified format pd")
         return 1    
 
     # image = convert_from_path('uploads/'+newFileName+'.pdf')
     # convert_from_path(image, output_folder='uploads')
-    pages = convert_from_path('uploads/'+newFileName+'.pdf' , 500)
-    for count, page in enumerate(pages):
-        page.save(f'uploads/'+newFileName+'.pdf.png', 'PNG')
+    # pages = convert_from_path('uploads/'+newFileName+'.pdf' , 500)
+    # for count, page in enumerate(pages):
+    #     page.save(f'uploads/'+newFileName+'.pdf.png', 'PNG')
 
     print("Completed")
     # transportedFile = 'uploads/'+newFileName+'.stl' 
