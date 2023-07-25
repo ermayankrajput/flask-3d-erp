@@ -12,6 +12,7 @@ from transfer_function import main_my
 import socket
 import platform
 from s3_upload import s3_upload
+from stltojpg import stlToImg
 
 conv_blueprint = Blueprint('conv_blueprint', __name__)
 
@@ -42,4 +43,7 @@ def conversion():
     s3UploadedFile = s3_upload(fileServerPath, newFileName)
     s3ImageFile = s3_upload('uploads/' + newFileName + '.png', newFileName + '.png')
     s3TransportedFile = s3_upload('uploads/' + newFileName + '.stl', newFileName + '.stl')
-    return jsonify({"success": True,"uploded_file": s3UploadedFile, "transported_file": newFileName + '.stl',"image_file": newFileName + '.png'})
+    dimensions = stlToImg('uploads/' + newFileName + '.stl' 'uploads/temp.png')
+    for f in os.listdir('uploads'):
+        os.remove(os.path.join('uploads', f))
+    return jsonify({"success": True,"uploded_file": s3UploadedFile, "transported_file": newFileName + '.stl',"image_file": newFileName + '.png', "x":str(dimensions.get("x")),"y":str(dimensions.get("y")),"z":str(dimensions.get("z"))})
