@@ -36,7 +36,7 @@ import cadexchanger.CadExCore as cadex
 sys.path.append(os.path.abspath(os.path.dirname(Path(__file__).resolve()) + r"/../../"))
 import cadex_license as license
 
-def main_my(theSource = 'abc.stp', newFileName='abc.stp'):
+def cadex_Converter(theSource = 'abc.stp', newFileName='abc.stp'):
 
     aKey = license.Value()
 

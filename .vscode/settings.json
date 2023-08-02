@@ -1,5 +1,9 @@
 {
     "python.analysis.extraPaths": [
-        "./conversion/transfer"
+        "./conversion/transfer",
+        "./quote",
+        "./conversion",
+        "./conversion",
+        "./conversion"
     ]
 }
