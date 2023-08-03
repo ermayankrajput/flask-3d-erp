@@ -8,29 +8,32 @@ from mesh_converter import meshRun
 import os
 import time
 from stltojpg import stlToImg
-from helpers.unique_fileName import unique_fileName
+from helpers.unique_fileName import allow_file, allowed_file, unique_fileName
 from helpers.uploaders import uploadToS3
-
+from transfers.transfer_function import cadex_Converter
 
 quote_api_blueprint = Blueprint('quote_api_blueprint', __name__)
 
 @quote_api_blueprint.route('/file-upload', methods = ['POST'])
 def upload3dFile():
-    file = request.files["file"]
-    uniqueFileName = unique_fileName(file.filename)
-    listExt = ["stp","STP","step","STEP","igs","IGS","iges","IGES","stl","STL","png"]
-    fileNameSplit = file.filename.split(".")
-    ext = fileNameSplit[len(fileNameSplit)-1]
+    files = request.files.getlist("file")
     # breakpoint()
-    if not ext in listExt:
-        return jsonify({"success": False, "message": "Invalid file type"})
-    if not os.path.exists('uploads'):
-        os.makedirs('uploads')
+    for file in files:
+        if file and allowed_file(file.filename):
+    # file = request.files["file"]
+            uniqueFileName = unique_fileName(file.filename)
+            # listExt = ["stp","STP","step","STEP","igs","IGS","iges","IGES","stl","STL","png"]
+            # fileNameSplit = file.filename.split(".")
+            # ext = fileNameSplit[len(fileNameSplit)-1]
+    # breakpoint()
+    # if not ext in listExt:
+    #     return jsonify({"success": False, "message": "Invalid file type"})
+            if not os.path.exists('uploads'):
+                os.makedirs('uploads')
 
-        file.save(f"uploads/{uniqueFileName}")
-        breakpoint()
-        fileServerPath = 'uploads/' + uniqueFileName
-    
+            file.save(f"uploads/{uniqueFileName}")
+            fileServerPath = 'uploads/' + uniqueFileName
+    breakpoint()
     while not os.path.exists(fileServerPath):
         print('file not saved yet')
         time.sleep(1)
@@ -39,7 +42,7 @@ def upload3dFile():
     file.close()
     os.chmod(fileServerPath, 0o777)
     
-    if ext not in ["stl", "STL"]:
+    if ext not in ["stl"]:
         ret = {'success': False, "converted_file": ""}
         queue = multiprocessing.Queue()
         queue.put(ret)
@@ -47,7 +50,7 @@ def upload3dFile():
         p.start()
         p.join()
         queueInfo  = queue.get()
-    transported_file = fileServerPath if ext in ["stl", "STL"] else str(fileNameSplit) + '.stl'
+    transported_file = fileServerPath if ext in ["stl", "STL"] else str(fileServerPath) + '.stl'
     dimensions = stlToImg(fileServerPath, fileServerPath+'.png')
     uploadProcess = multiprocessing.Process(target=uploadToS3, args=(fileServerPath, ))
     uploadProcess.start()
@@ -55,7 +58,6 @@ def upload3dFile():
 
 
 # POST Request
-
 
 @quote_api_blueprint.route('/quote', methods = ['POST'])
 def createQuote():
@@ -309,3 +311,26 @@ def getAllQuoteBetweenDate():
     quotes = Quote.query.filter(func.date(Quote.quote_date).between(request.args.get('date'),request.args.get('end'))).all()
     result = [quote.serialize() for quote in quotes]
     return jsonify(result)
+
+
+
+@quote_api_blueprint.route('/upload', methods = ['POST'])
+def uploads3dFile():
+    files = request.files.getlist("file")
+    for file in files:
+        if file and allowed_file(file.filename):
+            uniqueFileName = unique_fileName(file.filename)
+
+        if not os.path.exists('uploads'):
+            os.makedirs('uploads')
+        # breakpoint()
+        file.save(f"uploads/{uniqueFileName}")
+        fileServerPath = 'uploads/' + uniqueFileName
+        if not allow_file(file.filename):
+            cadex_Converter(fileServerPath, uniqueFileName+".stl")
+        transported_file = fileServerPath if allow_file(file.filename) else str(fileServerPath) + '.stl'
+        # dimensions = stlToImg(fileServerPath, fileServerPath+'.png') "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))
+        uploadProcess = multiprocessing.Process(target=uploadToS3, args=(fileServerPath, ))
+        uploadProcess.start()
+    return "true"
+    # return jsonify({"Success":True, "file_name":file.filename, "uploded_file":fileServerPath, "transported_file":transported_file, "image_file": fileServerPath+'.png'})
