@@ -317,6 +317,10 @@ def getAllQuoteBetweenDate():
 @quote_api_blueprint.route('/upload', methods = ['POST'])
 def uploads3dFile():
     files = request.files.getlist("file")
+    file_name = []
+    uploded_file = []
+    transported_file = []
+    image_file=[]
     for file in files:
         if file and allowed_file(file.filename):
             uniqueFileName = unique_fileName(file.filename)
@@ -326,11 +330,15 @@ def uploads3dFile():
         # breakpoint()
         file.save(f"uploads/{uniqueFileName}")
         fileServerPath = 'uploads/' + uniqueFileName
+        uploded_file.append(fileServerPath)
+        file_name.append(file.filename)
         if not allow_file(file.filename):
             cadex_Converter(fileServerPath, uniqueFileName+".stl")
-        transported_file = fileServerPath if allow_file(file.filename) else str(fileServerPath) + '.stl'
+        transport_file = fileServerPath if allow_file(file.filename) else str(fileServerPath) + '.stl'
+        transported_file.append(transport_file)
+        image_file.append(fileServerPath+'.png')
         # dimensions = stlToImg(fileServerPath, fileServerPath+'.png') "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))
         uploadProcess = multiprocessing.Process(target=uploadToS3, args=(fileServerPath, ))
         uploadProcess.start()
-    return "true"
+    return jsonify({"Success":True,"file_name":file_name,"uploded_file":uploded_file,"transported_file":transported_file,"image_file":image_file})
     # return jsonify({"Success":True, "file_name":file.filename, "uploded_file":fileServerPath, "transported_file":transported_file, "image_file": fileServerPath+'.png'})
