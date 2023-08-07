@@ -7,10 +7,11 @@ import multiprocessing
 from mesh_converter import meshRun
 import os
 import time
-from stltojpg import stlToImg
-from helpers.unique_fileName import allow_file, allowed_file, unique_fileName
+from dimension import stlToImg
+from helpers.unique_fileName import  filter_files_by_extension, isStl, allowed_file, generate_json_data, unique_fileName
 from helpers.uploaders import uploadToS3
 from transfers.transfer_function import cadex_Converter
+import json
 
 quote_api_blueprint = Blueprint('quote_api_blueprint', __name__)
 
@@ -314,31 +315,72 @@ def getAllQuoteBetweenDate():
 
 
 
-@quote_api_blueprint.route('/upload', methods = ['POST'])
+@quote_api_blueprint.route('/quote-upload', methods = ['POST'])
 def uploads3dFile():
-    files = request.files.getlist("file")
-    file_name = []
-    uploded_file = []
-    transported_file = []
-    image_file=[]
+    files_arr = []
+    files = request.files.getlist("files")
+    attachment_file_arr = []
     for file in files:
-        if file and allowed_file(file.filename):
+        matching_files , non_matching  = filter_files_by_extension(file.filename)
+        print(non_matching)
+        if file.filename in non_matching:
             uniqueFileName = unique_fileName(file.filename)
+            # breakpoint()
+            if not os.path.exists('uploads/attachment_files'):
+                os.makedirs('uploads/attachment_files')
+            file.save(f"uploads/attachment_files/{uniqueFileName}")
+            fileServerPath = 'uploads/attachment_files/' + uniqueFileName
+            attachment_file_arr.append(fileServerPath)
+            print(file.filename)
+    attachment_file_json = json.dumps(attachment_file_arr)
+    # breakpoint()
+    quote = Quote(attachments = attachment_file_json)
+    db.session.add(quote)
+    db.session.commit()
+    # breakpoint()
+    quoteId = int(request.form.get('quote-id'))
+    # breakpoint()
+    if quoteId:
+        quote = Quote.query.get(quoteId)
+    if not quoteId and quote is None:
+        quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None)
+        db.session.add(quote)
+        db.session.commit()
+    for file in files: 
+        matching_files,non_matching = filter_files_by_extension(file.filename)
+        if file.filename in matching_files:
+            # breakpoint()
+            uniqueFileName = unique_fileName(file.filename)
+            # breakpoint()
+            if not os.path.exists('uploads'):
+                os.makedirs('uploads')
+            file.save(f"uploads/{uniqueFileName}")
+            fileServerPath = 'uploads/' + uniqueFileName
+            if not isStl(file.filename):
+                cadex_Converter(fileServerPath, uniqueFileName+".stl")
+            transport_file = fileServerPath if isStl(file.filename) else str(fileServerPath) + '.stl'
+            file_data_list = {
+                    "filename": file.filename,
+                    "uploded_file" : fileServerPath,
+                    "transported": transport_file,
+                    "image": fileServerPath+'.png'
+                }
+            # dimensions = stlToImg(fileServerPath, fileServerPath+'.png') "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))
+            uploadProcess = multiprocessing.Process(target=uploadToS3, args=(fileServerPath, ))
+            uploadProcess.start()
+            files_arr.append(file_data_list)
+            # breakpoint()
+            createQuoteInfoAndUnitquote(quote.id, file_data_list)
+        
+        # files_arr.extend([generate_json_data(file_data_list)])
+    return jsonify(quote.serialize())
 
-        if not os.path.exists('uploads'):
-            os.makedirs('uploads')
-        # breakpoint()
-        file.save(f"uploads/{uniqueFileName}")
-        fileServerPath = 'uploads/' + uniqueFileName
-        uploded_file.append(fileServerPath)
-        file_name.append(file.filename)
-        if not allow_file(file.filename):
-            cadex_Converter(fileServerPath, uniqueFileName+".stl")
-        transport_file = fileServerPath if allow_file(file.filename) else str(fileServerPath) + '.stl'
-        transported_file.append(transport_file)
-        image_file.append(fileServerPath+'.png')
-        # dimensions = stlToImg(fileServerPath, fileServerPath+'.png') "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))
-        uploadProcess = multiprocessing.Process(target=uploadToS3, args=(fileServerPath, ))
-        uploadProcess.start()
-    return jsonify({"Success":True,"file_name":file_name,"uploded_file":uploded_file,"transported_file":transported_file,"image_file":image_file})
-    # return jsonify({"Success":True, "file_name":file.filename, "uploded_file":fileServerPath, "transported_file":transported_file, "image_file": fileServerPath+'.png'})
+
+def createQuoteInfoAndUnitquote(quoteId,file_data_list):
+    quoteinfo = QuoteInfo(uploded_file = file_data_list.get("uploded_file") ,transported_file = file_data_list.get("transported") ,material_search = None,technique = None,finishing = None,x_size = None,y_size= None,z_size = None,quote_id = quoteId,image_file=file_data_list.get("image"))
+    db.session.add(quoteinfo)
+    db.session.commit()
+    unitquote = UnitQuote(unit_price = None,quantity = None,lead_time=None,quote_info_id=quoteinfo.id)
+    db.session.add(unitquote)
+    db.session.commit()
+    return True

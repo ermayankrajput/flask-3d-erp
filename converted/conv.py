@@ -3,7 +3,7 @@ from flask import Blueprint
 from flask import Flask, abort, jsonify, request
 import os
 import sys
-from helpers.unique_fileName import allow_file, allowed_file, unique_fileName
+from helpers.unique_fileName import isStl, allowed_file, unique_fileName
 from helpers.uploaders import uploadToS3
 from transfers.transfer_function import cadex_Converter
 sys.path.append("conversion/transfer")
@@ -26,10 +26,10 @@ def conversion():
     # if not ext in listExt:
     #     return jsonify({"success": False, "message": "Invalid file type"}) 
     # if ext not in ["stl", "STL"]:
-    if not allow_file(file.filename):
+    if not isStl(file.filename):
         cadex_Converter(fileServerPath, uniqueFileName)
     # transported_file = fileServerPath if ext in ["stl", "STL"] else str(fileServerPath) + '.stl'
-    transported_file = fileServerPath if allow_file(file.filename)else str(fileServerPath) + '.stl'
+    transported_file = fileServerPath if isStl(file.filename)else str(fileServerPath) + '.stl'
     uploadProcess = multiprocessing.Process(target=uploadToS3, args=(fileServerPath, ))
     uploadProcess.start()
     return jsonify({"success": True, "file_name":file.filename,"uploded_file": fileServerPath, "transported_file": transported_file,"image_file": fileServerPath + '.png'})

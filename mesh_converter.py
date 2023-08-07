@@ -1,7 +1,6 @@
 import trimesh
 import os
-from stltojpg import stlToImg
-import requests
+from dimension import stlToImg
 
 def meshRun(queue,fileServerPath):
     print(fileServerPath)

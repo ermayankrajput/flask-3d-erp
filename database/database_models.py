@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from flask_migrate import Migrate
+from sqlalchemy import JSON
 # import jwt
 from sqlalchemy.sql import func
 from app import db
@@ -18,6 +19,7 @@ class Quote(db.Model):
     validity = db.Column(db.Integer,nullable = True)
     shipping_cost = db.Column(db.Numeric,nullable = True)
     grand_total = db.Column(db.Numeric,nullable = True)
+    attachments = db.Column(JSON)
     created_at = db.Column(db.DateTime(timezone=True), default=func.now())
     updated_at = db.Column(db.DateTime(timezone=True), default=func.now())
     quote_infos = db.relationship('QuoteInfo', backref = 'Quote', cascade="all, delete")
@@ -35,6 +37,7 @@ class Quote(db.Model):
                 "validity": self.validity,
                 "shipping_cost":self.shipping_cost,
                 "grand_total": self.grand_total,
+                "attachments":self.attachments,
                 "quote_infos": quote_infos
                 }
 
