@@ -9,6 +9,14 @@ def uploadToS3(filePath):
     
     return
 
+
 def emptyUploadFolder():
     for f in os.listdir('uploads'):
         os.remove(os.path.join('uploads', f))
+
+
+
+def uploadFileToS3(filePath):
+    s3_upload(filePath,filePath)
+
+    return

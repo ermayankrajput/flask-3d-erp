@@ -2,16 +2,20 @@ from flask import Blueprint, Response, abort, request,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime,date
 from sqlalchemy import func
-from database.database_models import Quote,QuoteInfo,UnitQuote, db
+from database.database_models import Quote,QuoteInfo,UnitQuote, db 
 import multiprocessing
 from mesh_converter import meshRun
 import os
 import time
 from dimension import stlToImg
-from helpers.unique_fileName import  filter_files_by_extension, isStl, allowed_file, generate_json_data, unique_fileName
-from helpers.uploaders import uploadToS3
+from helpers.unique_fileName import  filter_files_by_extension, isStl, allowed_file, unique_fileName
+from helpers.uploaders import uploadFileToS3, uploadToS3
 from transfers.transfer_function import cadex_Converter
 import json
+from werkzeug.utils import secure_filename
+import zipfile
+from app import app 
+
 
 quote_api_blueprint = Blueprint('quote_api_blueprint', __name__)
 
@@ -321,11 +325,11 @@ def uploads3dFile():
     files = request.files.getlist("files")
     attachment_file_arr = []
     for file in files:
-        matching_files , non_matching  = filter_files_by_extension(file.filename)
-        print(non_matching)
-        if file.filename in non_matching:
+        matching3d_files , non3d_matching_files  = filter_files_by_extension(file.filename)
+        # print(non_matching)
+        if file.filename in non3d_matching_files:
             uniqueFileName = unique_fileName(file.filename)
-            # breakpoint()
+
             if not os.path.exists('uploads/attachment_files'):
                 os.makedirs('uploads/attachment_files')
             file.save(f"uploads/attachment_files/{uniqueFileName}")
@@ -333,6 +337,9 @@ def uploads3dFile():
             attachment_file_arr.append(fileServerPath)
             print(file.filename)
     attachment_file_json = json.dumps(attachment_file_arr)
+    uploadProcess = multiprocessing.Process(target=uploadFileToS3, args=(fileServerPath, ))
+    uploadProcess.start()
+    # files_arr.append(file_data_list)
     # breakpoint()
     quote = Quote(attachments = attachment_file_json)
     db.session.add(quote)
@@ -346,9 +353,9 @@ def uploads3dFile():
         quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None)
         db.session.add(quote)
         db.session.commit()
-    for file in files: 
-        matching_files,non_matching = filter_files_by_extension(file.filename)
-        if file.filename in matching_files:
+    for file in files:
+        matching3d_files,non3d_matching_files = filter_files_by_extension(file.filename)
+        if file.filename in matching3d_files:
             # breakpoint()
             uniqueFileName = unique_fileName(file.filename)
             # breakpoint()
@@ -384,3 +391,105 @@ def createQuoteInfoAndUnitquote(quoteId,file_data_list):
     db.session.add(unitquote)
     db.session.commit()
     return True
+
+
+
+# UPLOAD_FOLDER = 'uploads/zip'
+
+# ALLOWED_EXTENSIONS = {'zip'}
+
+# app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
+# def allowed_file(filename):
+#     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+# @quote_api_blueprint.route('/upload-zip', methods=['POST'])
+# def upload_file():
+#     if 'file' not in request.files:
+#         return jsonify({'error': 'No file part'}), 400
+
+#     file = request.files['file']
+
+#     if file.filename == '':
+#         return jsonify({'error': 'No selected file'}), 400
+
+#     if file and allowed_file(file.filename):
+#         filename = unique_fileName(file.filename)
+#         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+#         print(file_path)
+        # if not os.path.exists('uploads/zip'):
+        #     os.makedirs('uploads/zip')
+#         file.save(file_path)
+#         # zipdata = zipfile.ZipFile(file_path)
+#         # zipinfos = zipdata.infolist()
+#         # zipinfos[0].filename = 'abcd'
+
+#         # extract_folder = os.path.join(app.config['UPLOAD_FOLDER'], filename.rsplit('.', 1)[0])
+#         # os.makedirs('uploads/zip', exist_ok=True)
+        
+#         with zipfile.ZipFile(file_path, 'r') as zip_ref:
+#             # zip_ref.filename = "ggggg"
+#             zip_ref.extractall(file_path)
+#             # zip_ref.extractall(os.path.join(app.config['UPLOAD_FOLDER'], os.path.splitext(filename)[0]))
+
+#         os.remove(file_path) 
+#         extracted_files = os.listdir(file_path)
+
+#         return jsonify({'message': 'File uploaded and extracted successfully',"files":extracted_files}), 200
+
+#     return jsonify({'error': 'Invalid file type'}), 400
+
+
+
+UPLOAD_FOLDER = 'upload/zip'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+def extract_and_save_zip(zip_path, dest_folder):
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(dest_folder)
+
+def generate_unique_filename(filename):
+    base_name, ext = os.path.splitext(filename)
+    timestamp = time.strftime('%Y%m%d%H%M%S')
+    unique_name = f"{base_name}_{timestamp}{ext}"+filename
+    return unique_name
+
+@quote_api_blueprint.route('/upload-zip', methods=['POST'])
+def upload_and_extract():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    if file:
+        # Save the uploaded ZIP file
+        filename = unique_fileName(file.filename)
+        zip_filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        # breakpoint()
+        # if not os.path.exists('uploads/zip'):
+        #     os.makedirs('uploads/zip')
+        #     breakpoint()
+        file.save(zip_filename)
+        
+
+        # Extract and save files from the ZIP
+        extracted_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'extracted')
+        os.makedirs(extracted_folder, exist_ok=True)
+        extract_and_save_zip(zip_filename, extracted_folder)
+
+        # Generate unique names for extracted files
+        extracted_files = os.listdir(extracted_folder)
+        unique_names = []
+        for extracted_file in extracted_files:
+            unique_name = generate_unique_filename(extracted_file)
+            os.rename(os.path.join(extracted_folder, extracted_file), os.path.join(extracted_folder, unique_name))
+            unique_names.append(unique_name)
+
+        return jsonify({'message': 'File uploaded and extracted successfully', 'extracted_files': unique_names})
+    
+    return jsonify({'error': 'Invalid file type'}), 400

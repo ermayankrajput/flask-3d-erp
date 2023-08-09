@@ -34,15 +34,15 @@ import os
 
 def filter_files_by_extension(file):
     matching_extensions = {"stp", "step", "igs", "iges", "stl"}
-    matching_files = []
-    non_matching_files = []
+    matching3d_files = []
+    non3d_matching_files = []
     file_extension = os.path.splitext(file)[1][1:].lower()
     if file_extension in matching_extensions:
-        matching_files.append(file)
+        matching3d_files.append(file)
     else:
-        non_matching_files.append(file)
+        non3d_matching_files.append(file)
         
-    return matching_files, non_matching_files
+    return matching3d_files, non3d_matching_files
 
 
 # def attachment(file):
