@@ -1,8 +1,5 @@
 from datetime import datetime
-import json
 import os
-
-from database.database_models import Quote ,db
 
 ALLOWED_EXTENSIONS = set(["stp","step","igs","iges","stl","png"])
 
@@ -18,19 +15,38 @@ def isStl(filename):
 def unique_fileName(fileName = ''):
     return str(datetime.now().timestamp()).replace(".","") + fileName
 
+def unique_fileName_with_path(path):
+    path = path.replace(os.sep, '/')
+    ext =  '.' in path and path.rsplit('.',1)[1].lower()
+    return path + str(datetime.now().timestamp()) + '.' + ext
+
 def generate_json_data(file_data_list):
     json_data = {
+        "file": [
+            {
+                "file": item["file"],
+                "filename":item["filename"],
+                "date": item["date"]
+            }
+            for item in file_data_list
+        ]
+    }
+    return json_data
+
+
+def generate_json(file_data):
+    json1_data = {
         "file": [
             {
                 "filename": item["filename"],
                 "transported": item["transported"],
                 "image": item["image"]
             }
-            for item in file_data_list
+            for item in file_data
         ]
     }
-    return json_data
-import os
+    return json1_data
+
 
 def filter_files_by_extension(file):
     matching_extensions = {"stp", "step", "igs", "iges", "stl"}
@@ -43,9 +59,3 @@ def filter_files_by_extension(file):
         non3d_matching_files.append(file)
         
     return matching3d_files, non3d_matching_files
-
-
-# def attachment(file):
-#         quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None)
-#         db.session.add(quote)
-#         db.session.commit()

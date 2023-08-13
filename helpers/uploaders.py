@@ -16,7 +16,7 @@ def emptyUploadFolder():
 
 
 
-def uploadFileToS3(filePath):
-    s3_upload(filePath,filePath)
-
+def uploadFileToS3(file):
+    for i  in range(len(file)):
+        s3_upload(file[i],file[i])
     return
