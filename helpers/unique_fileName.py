@@ -59,3 +59,8 @@ def filter_files_by_extension(file):
         non3d_matching_files.append(file)
         
     return matching3d_files, non3d_matching_files
+
+ALLOW_EXTENSIONS = {'zip'}
+def iszip(filename):
+    ext =  '.' in filename and filename.rsplit('.',1)[1].lower() in ALLOW_EXTENSIONS
+    return ext

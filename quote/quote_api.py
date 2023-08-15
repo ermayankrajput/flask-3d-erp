@@ -2,7 +2,6 @@ from click import DateTime
 from flask import Blueprint, Response, abort, request,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime,date
-from helpers.non3d_files_handler import handelnon3dFiles
 from sqlalchemy import func
 from database.database_models import Quote, QuoteInfo, UnitQuote
 from app import db
@@ -12,7 +11,7 @@ from mesh_converter import meshRun
 import os
 import time
 from dimension import stlToImg
-from helpers.unique_fileName import  filter_files_by_extension, isStl, allowed_file, unique_fileName, unique_fileName_with_path
+from helpers.unique_fileName import  filter_files_by_extension, isStl, allowed_file, iszip, unique_fileName, unique_fileName_with_path
 from helpers.uploaders import uploadFileToS3, uploadToS3
 from transfers.transfer_function import cadex_Converter
 import json
@@ -396,9 +395,10 @@ def createQuoteInfoAndUnitquote(quoteId,file_data_list):
 
 UPLOAD_FOLDER = 'uploads'
 EXTRACTED_FOLDER = 'extracted'
-ALLOWED_EXTENSIONS = {'zip'}
+
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['EXTRACTED_FOLDER'] = EXTRACTED_FOLDER
+
 
 @quote_api_blueprint.route('/upload-zip', methods=['POST'])
 def upload_zip():
@@ -409,7 +409,7 @@ def upload_zip():
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
-    if file and allowed_file(file.filename):
+    if file and iszip(file.filename):
         filename = unique_fileName(file.filename)
         upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         if not os.path.exists('uploads'):
