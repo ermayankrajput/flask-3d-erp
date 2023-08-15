@@ -4,6 +4,7 @@ from flask import abort, jsonify, make_response, request,Blueprint
 import jwt
 from  werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+from users.auth_middleware import token_required
 from database.database_models import User,Role,db
 from app import app 
 from sqlalchemy import func
@@ -21,44 +22,42 @@ def generateHashedPassword(password):
 @user_api_blueprint.route('/signup', methods = ['POST'])
 def sign_up():
     user = User.query.filter_by(email=request.json['email']).first()
-    # role = Role.query.get(role_id)
     if user:
         msg="User already exist"
         return msg 
     
     # Hashing the password
-    # breakpoint()
-    user = User(email=request.json['email'], status=1, first_name= 'lol',last_name= 'ji',email_confirmed_at= str(datetime.now()), password = generateHashedPassword(request.json['password']).decode(),age = 34,role_id=1)
+    user = User(email=request.json['email'], status=1, first_name= request.json['first_name'],last_name=request.json['last_name'],email_confirmed_at= str(datetime.now()), password = generateHashedPassword(request.json['password']).decode(),age = request.json['age'],role_id=request.json['role_id'])
     db.session.add(user)
     db.session.commit()
     return jsonify(user.serialize())
 
 
 
-@user_api_blueprint.route('/register-role/', methods = ['POST'])
-def register():
-    role = Role(name = 'Engineer', status = 1)
-    db.session.add(role)
-    db.session.commit()
-    return jsonify(role.serialize())
+# @user_api_blueprint.route('/register-role/', methods = ['POST'])
+# def register():
+#     role = Role(name = 'Engineer', status = 1)
+#     db.session.add(role)
+#     db.session.commit()
+#     return jsonify(role.serialize())
 
 
 
-@user_api_blueprint.route('/user/<int:user_id>/', methods = ['GET'])
+@user_api_blueprint.route('/user/<int:user_id>', methods = ['GET'])
 def getUser(user_id):
     user = User.query.get(user_id)
     return jsonify(user.serialize())
 
 
 
-@user_api_blueprint.route('/user-role/<int:role_id>/', methods = ['GET'])
+@user_api_blueprint.route('/user-role/<int:role_id>', methods = ['GET'])
 def getRole(role_id):
     user = Role.query.get(role_id)
     return jsonify(user.serialize())
 
  
 
-@user_api_blueprint.route('/user/', methods = ['PATCH'])
+@user_api_blueprint.route('/user', methods = ['PATCH'])
 def updateQuote():
     user = User.query.get(request.json["id"])
     if user is None:
@@ -72,7 +71,7 @@ def updateQuote():
 
 
 
-@user_api_blueprint.route("/user/", methods = ["DELETE"])
+@user_api_blueprint.route("/user", methods = ["DELETE"])
 def deleteQuote():
     if User.query.filter_by(id=request.json["id"]).delete():
         db.session.commit()
@@ -114,7 +113,7 @@ def login():
         token = jwt.encode({
             'public_id': user.id,
             'exp' : datetime.utcnow() + timedelta(minutes = 30)
-        }, app.config['SECRET_KEY'], algorithms=["HS256"])
+        }, app.config['SECRET_KEY'])
         return jsonify({'success': True,'token' : token})
     # returns 403 if password is wrong
     return make_response(
@@ -122,3 +121,9 @@ def login():
         403,
         {'WWW-Authenticate' : 'Basic realm ="Wrong Password !!"'}
     )
+
+
+@app.route("/get/user", methods=["GET"])
+@token_required
+def get_current_user(current_user):
+    return jsonify(current_user.serialize())
