@@ -42,6 +42,9 @@ def add_header(r):
 
 if __name__ == '__main__':
     app.run()
+    
+    
+
 
 
 # @app.errorhandler(404)
@@ -65,6 +68,10 @@ app.register_blueprint(quote_api_blueprint)
 
 from users.users_api import user_api_blueprint
 app.register_blueprint(user_api_blueprint)
+
+# from users.user_role import create_roles, user_role_blueprint
+# app.register_blueprint(user_role_blueprint)
+
 # class quote(db.model):
 #     id = db.Column(db.Integer, primary_key=True)
 #     date = db.Column(db.date,nullable = False)

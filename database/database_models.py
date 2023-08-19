@@ -7,6 +7,8 @@ from sqlalchemy import JSON
 # import jwt
 from sqlalchemy.sql import func
 from app import db
+from alembic import op
+import sqlalchemy as sa
 # from flask_login import LoginManager, login_manager, login_user
 # from flask_security import Security, SQLAlchemySessionUserDatastore
 # from flask_security import UserMixin, RoleMixin
@@ -172,4 +174,3 @@ class Role(db.Model):
 
 # with db.app_context():
 #     db.create_all()
-
