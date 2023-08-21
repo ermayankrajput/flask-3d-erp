@@ -26,7 +26,7 @@ app.config['SECRET_KEY'] = '128566299290685828278054891499021371965'
 db = SQLAlchemy(app)
 migrate = Migrate(app, db, compare_type=True)
 
-from database.database_models import User
+# from database.database_models import User
 # decorator factory which invoks update_wrapper() method and passes decorated function as an argument
 
 @app.after_request
@@ -63,6 +63,8 @@ app.register_blueprint(conv_blueprint)
 from quote.quote_api import quote_api_blueprint
 app.register_blueprint(quote_api_blueprint)
 
+# from helpers.non3d_files_handler import helper_handelnon3dFiles_bluprint
+# app.register_blueprint(helper_handelnon3dFiles_bluprint)
 # from users_api import user_api_blueprint
 # app.register_blueprint(user_api_blueprint)
 # class quote(db.model):

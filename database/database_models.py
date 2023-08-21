@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from flask_migrate import Migrate
+from sqlalchemy import JSON
 # import jwt
 from sqlalchemy.sql import func
 from app import db
@@ -18,6 +19,7 @@ class Quote(db.Model):
     validity = db.Column(db.Integer,nullable = True)
     shipping_cost = db.Column(db.Numeric,nullable = True)
     grand_total = db.Column(db.Numeric,nullable = True)
+    attachments = db.Column(JSON, default=[])
     created_at = db.Column(db.DateTime(timezone=True), default=func.now())
     updated_at = db.Column(db.DateTime(timezone=True), default=func.now())
     quote_infos = db.relationship('QuoteInfo', backref = 'Quote', cascade="all, delete")
@@ -35,6 +37,7 @@ class Quote(db.Model):
                 "validity": self.validity,
                 "shipping_cost":self.shipping_cost,
                 "grand_total": self.grand_total,
+                "attachments":self.attachments,
                 "quote_infos": quote_infos
                 }
 
@@ -46,6 +49,7 @@ class QuoteInfo(db.Model):
     material_search = db. Column(db.String(100), nullable = True)
     technique = db. Column(db.String(100), nullable = True)
     finishing = db. Column(db.String(100), nullable = True)
+    file_name = db.Column(db.Text(), nullable = True)
     x_size = db.Column(db.Numeric,nullable = True)
     y_size = db.Column(db.Numeric,nullable = True)
     z_size = db.Column(db.Numeric,nullable = True)
@@ -66,6 +70,7 @@ class QuoteInfo(db.Model):
                 "material_search":self.material_search,
                 "technique": self.technique,
                 "finishing" : self.finishing,
+                "file_name" : self.file_name,
                 "x_size" : self.x_size,
                 "y_size": self.y_size,
                 "z_size":self.z_size,
