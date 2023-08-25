@@ -34,7 +34,7 @@ def upload3dFile():
             fileServerPath = 'uploads/' + uniqueFileName
     breakpoint()
     while not os.path.exists(fileServerPath):
-        print('file not saved yet')
+        # print('file not saved yet')
         time.sleep(1)
     if not os.path.isfile(fileServerPath):
         return "file not saved anyhow"
