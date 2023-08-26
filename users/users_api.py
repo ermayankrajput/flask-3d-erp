@@ -4,9 +4,8 @@ from flask import abort, jsonify, make_response, request,Blueprint
 # from flask_security import roles_accepted
 # from flask_login import LoginManager, login_required, logout_user
 import jwt
-from decoder import ADMIN_ROLE, role_accepted
 # from  werkzeug.security import generate_password_hash, check_password_hash
-from users.auth_middleware import token_required
+from users.auth_middleware import token_required, roles_required, ADMIN_ROLE, USER_ROLE
 from database.database_models import User,Role,db
 from app import app 
 from sqlalchemy import func
@@ -152,23 +151,6 @@ def get_current_user(current_user):
 
 
 @user_api_blueprint.route('/access', methods=["GET"])
-@token_required('Admin')
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def teachers(current_user):
-    # users = []
-    # if current_user:
-    #     role = role_accepted(current_user, [1])
-    #     if role:
-    #         users = User.query.filter_by(role_id=2)
-    #     result = [user.serialize() for user in users]
-    #     return jsonify(result)
-    return "user not found"
-#     users = []
-#     # query for role user that is role_id=2
-#     role_users = db.session.query(User).filter_by(role_id=2)
-  
-#     # query for the users' details using user_id
-#     for user in role_users:
-#         user = User.query.filter_by(id=user.id).first()
-#         users.append(user)
-#     # return the teachers list
-        # return "yy"
+    return jsonify(current_user.serialize())
