@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 from flask import abort, jsonify, make_response, request,Blueprint
+# from flask_jwt_extended import current_user
+# from flask_security import roles_accepted
 # from flask_login import LoginManager, login_required, logout_user
 import jwt
+from decoder import ADMIN_ROLE, role_accepted
 # from  werkzeug.security import generate_password_hash, check_password_hash
-from functools import wraps
 from users.auth_middleware import token_required
 from database.database_models import User,Role,db
 from app import app 
@@ -11,8 +13,6 @@ from sqlalchemy import func
 # from flask_security import roles_accepted
 # from flask_jwt_extended import create_access_token, current_user
 import bcrypt
-
-
 user_api_blueprint = Blueprint('user_api_blueprint', __name__)
 
 def generateHashedPassword(password):
@@ -148,4 +148,27 @@ def get_current_user(current_user):
 #     db.session.add(user)
 #     db.session.commit()
 #     logout_user()
-    # return "Done"
+#     return "Done"
+
+
+@user_api_blueprint.route('/access', methods=["GET"])
+@token_required('Admin')
+def teachers(current_user):
+    # users = []
+    # if current_user:
+    #     role = role_accepted(current_user, [1])
+    #     if role:
+    #         users = User.query.filter_by(role_id=2)
+    #     result = [user.serialize() for user in users]
+    #     return jsonify(result)
+    return "user not found"
+#     users = []
+#     # query for role user that is role_id=2
+#     role_users = db.session.query(User).filter_by(role_id=2)
+  
+#     # query for the users' details using user_id
+#     for user in role_users:
+#         user = User.query.filter_by(id=user.id).first()
+#         users.append(user)
+#     # return the teachers list
+        # return "yy"

@@ -20,3 +20,8 @@ def uploadFileToS3(file):
     for i  in range(len(file)):
         s3_upload(file[i],file[i])
     return
+
+# def get_user_role(): 
+#     if current_user.is_authenticated:
+#         return current_user.role
+#     return None
