@@ -64,8 +64,8 @@ app.register_blueprint(conv_blueprint)
 # from database.database_models import database_models_blueprint
 # app.register_blueprint(database_models_blueprint)
 
-# from quote.quote_api import quote_api_blueprint
-# app.register_blueprint(quote_api_blueprint)
+from quote.quote_api import quote_api_blueprint
+app.register_blueprint(quote_api_blueprint)
 
 from users.users_api import user_api_blueprint
 app.register_blueprint(user_api_blueprint)

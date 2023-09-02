@@ -46,7 +46,7 @@ def upgrade():
     sa.UniqueConstraint('token')
     )
     # ### end Alembic commands ###
-    roles = ['Admin', 'User']
+    roles = ['Admin', 'User','Engineer']
     for role in roles:
         op.execute(Role.__table__.insert().values(name=role))
 

@@ -1,5 +1,7 @@
-from datetime import datetime
+import datetime
 import os
+from flask import app
+import jwt
 
 ALLOWED_EXTENSIONS = set(["stp","step","igs","iges","stl","png"])
 
@@ -64,3 +66,7 @@ ALLOW_EXTENSIONS = {'zip'}
 def iszip(filename):
     ext =  '.' in filename and filename.rsplit('.',1)[1].lower() in ALLOW_EXTENSIONS
     return ext
+
+
+# def njjf():
+#     if not @roles_required(ADMIN_ROLE, USER_ROLE)

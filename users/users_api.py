@@ -5,8 +5,8 @@ from flask import abort, jsonify, make_response, request,Blueprint
 # from flask_login import LoginManager, login_required, logout_user
 import jwt
 # from  werkzeug.security import generate_password_hash, check_password_hash
-from users.auth_middleware import token_required, roles_required, ADMIN_ROLE, USER_ROLE
-from database.database_models import User,Role,db
+from users.auth_middleware import generate_token, token_required, roles_required, ADMIN_ROLE, USER_ROLE, is_current_user
+from database.database_models import Quote, QuoteInfo, UnitQuote, User,Role,db
 from app import app 
 from sqlalchemy import func
 # from flask_security import roles_accepted
@@ -43,6 +43,7 @@ def sign_up():
 
 
 @user_api_blueprint.route('/user/<int:user_id>', methods = ['GET'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def getUser(user_id):
     user = User.query.get(user_id)
     if user:
@@ -52,6 +53,7 @@ def getUser(user_id):
 
 
 @user_api_blueprint.route('/user-role/<int:role_id>', methods = ['GET'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def getRole(role_id):
     user = Role.query.get(role_id)
     if user is None:
@@ -61,6 +63,7 @@ def getRole(role_id):
  
 
 @user_api_blueprint.route('/user', methods = ['PATCH'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def updateUser():
     user = User.query.get(request.json["id"])
     if user is None:
@@ -72,6 +75,7 @@ def updateUser():
     
 
 @user_api_blueprint.route("/user", methods = ["DELETE"])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def deleteUser():
     if User.query.filter_by(id=request.json["id"]).delete():
         db.session.commit()
@@ -103,7 +107,7 @@ def login():
         return make_response(
             'Could not verify',
             401,
-            {'WWW-Authenticate' : 'Basic realm ="User does not exist !!"'}
+            {'WWW-Authenticate' : 'Basic realm ="Wrong username or Password !!"'}
         )
     
     if user.password == generateHashedPassword(auth.get('password')).decode():
@@ -118,7 +122,7 @@ def login():
     return make_response(
         'Could not verify',
         403,
-        {'WWW-Authenticate' : 'Basic realm ="Wrong Password !!"'}
+        {'WWW-Authenticate' : 'Basic realm ="Wrong username or Password !!"'}
     )
 
 
@@ -133,7 +137,6 @@ def get_current_user(current_user):
 #     """Given *user_id*, return the associated User object.
 
 #     :param unicode user_id: user_id (email) user to retrieve
-
 #     """
 #     return User.query.get(user_id)
 
@@ -154,3 +157,39 @@ def get_current_user(current_user):
 @roles_required(ADMIN_ROLE, USER_ROLE)
 def teachers(current_user):
     return jsonify(current_user.serialize())
+
+
+@user_api_blueprint.route('/share/<uuid>/<email>', methods = ["POST"] )
+@is_current_user
+def shared_user(current_user, email, uuid):
+    token = ''
+    if not current_user:
+        if not email:
+            return False
+        user = User.query.filter_by(email = email).first()
+        if not user:
+            user = User(email=email, status=1,email_confirmed_at= str(datetime.now()), role_id=2)
+            db.session.add(user)
+            db.session.commit()
+        current_user = user
+        token = generate_token(current_user)
+        if not uuid:
+            return False
+        old_quote = Quote.query.filter_by(uuid = uuid).first()
+        quote = Quote.query.filter_by(parent_id = old_quote.id, user_id = current_user.id).first()
+        if quote:
+            return jsonify({'token' : token, 'quote': quote.serialize()})
+        quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = old_quote.attachments, user_id = current_user.id, parent_id = old_quote.id,)
+        db.session.add(quote)
+        db.session.commit()
+        old_quoteinfos = QuoteInfo.query.filter_by(quote_id = old_quote.id)
+        for quoteinfo in old_quoteinfos:
+            quoteinfo = QuoteInfo(uploded_file = quoteinfo.uploded_file ,file_name = quoteinfo.file_name,transported_file =quoteinfo.transported_file ,material_search = quoteinfo.material_search,technique = quoteinfo.technique,finishing = quoteinfo.finishing,x_size = quoteinfo.x_size,y_size= quoteinfo.y_size,z_size = quoteinfo.z_size,quote_id = quote.id,image_file=quoteinfo.image_file)
+            db.session.add(quoteinfo)
+            db.session.commit()
+            unitquote = UnitQuote(unit_price = None,quantity = None,lead_time=None,quote_info_id=quoteinfo.id)
+            db.session.add(unitquote)
+            db.session.commit()
+    return jsonify({'token' : token, 'quote': quote.serialize()})
+
+

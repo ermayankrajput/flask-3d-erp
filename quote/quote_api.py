@@ -3,6 +3,7 @@ from flask import Blueprint, Response, abort, request,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime,date
 from sqlalchemy import func
+from users.auth_middleware import ADMIN_ROLE, USER_ROLE, roles_required
 from database.database_models import Quote, QuoteInfo, UnitQuote
 from app import db
 import multiprocessing
@@ -11,7 +12,7 @@ from mesh_converter import meshRun
 import os
 import time
 from dimension import stlToImg
-from helpers.unique_fileName import  filter_files_by_extension, isStl, allowed_file, iszip, unique_fileName, unique_fileName_with_path
+from helpers.helper_function import  filter_files_by_extension, isStl, allowed_file, iszip, unique_fileName, unique_fileName_with_path
 from helpers.uploaders import uploadFileToS3, uploadToS3
 from transfers.transfer_function import cadex_Converter
 import json
@@ -142,10 +143,9 @@ def createUnitQuote(quote_info_id):
 
 
 @quote_api_blueprint.route('/unit-quote/', methods = ['PATCH'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def updateUnitQuote():
-    # breakpoint()
     unit_quote = UnitQuote.query.get(request.json["id"])
-   
     if unit_quote is None:
         abort(404)
     else:
@@ -163,6 +163,7 @@ def updateUnitQuote():
 
 
 @quote_api_blueprint.route('/quote-info/', methods = ['PATCH'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def updateQuoteInfo():
     quote_info = QuoteInfo.query.get(request.json["id"])
     if quote_info is None:
@@ -176,7 +177,7 @@ def updateQuoteInfo():
 # Endpoint belong to update quote..
 # need quote id and to change data..
 # Example-: /quote/
-# in json form
+# in json form 
 #{"id": 4,
 # "shipping_cost" : .....,
 # }
@@ -184,6 +185,7 @@ def updateQuoteInfo():
 #
 
 @quote_api_blueprint.route('/quote/', methods = ['PATCH'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def updateQuote():
     quote = Quote.query.get(request.json["id"])
     if quote is None:
@@ -191,7 +193,6 @@ def updateQuote():
     else:
         db.session.query(Quote).filter_by(id=quote.id).update(request.json)
         db.session.commit()
-        # breakpoint()
         return jsonify(quote.serialize())
 
 #DELETE REQUEST
@@ -206,6 +207,7 @@ def updateQuote():
 # }
 
 @quote_api_blueprint.route("/unit-quote/", methods = ["DELETE"])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def deleteUnitQuote():
     if UnitQuote.query.filter_by(id=request.json["id"]).delete():
         db.session.commit()
@@ -222,6 +224,7 @@ def deleteUnitQuote():
 # }
 
 @quote_api_blueprint.route("/quote-info/", methods = ["DELETE"])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def deleteQuoteInfo():
     if QuoteInfo.query.filter_by(id=request.json["id"]).delete():
         db.session.commit()
@@ -237,6 +240,7 @@ def deleteQuoteInfo():
 # "id":9
 # }
 @quote_api_blueprint.route("/quote/", methods = ["DELETE"])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def deleteQuote():
     if Quote.query.filter_by(id=request.json["id"]).delete():
         db.session.commit()
@@ -249,9 +253,13 @@ def deleteQuote():
 # Endpoint belong to Get unit-quote..
 # need unit-quote id to get quote in url..
 
-
 @quote_api_blueprint.route('/unit-quote/<int:unit_quote_id>', methods = ['GET'])
-def getUnitQuote(unit_quote_id):
+@roles_required(ADMIN_ROLE, USER_ROLE)
+def getUnitQuote(current_user,unit_quote_id):
+    if current_user.role_id == ADMIN_ROLE:
+        unit_quote = UnitQuote.query.all()
+        result = [unit_quote.serialize() for unit_quote in unit_quote]
+        return jsonify(result)
     unit_quote = UnitQuote.query.get(unit_quote_id)
     return jsonify(unit_quote.serialize())
 
@@ -259,6 +267,7 @@ def getUnitQuote(unit_quote_id):
 # need quote-info id to get quote in url..
 
 @quote_api_blueprint.route('/quote-info/<int:quote_info_id>', methods = ['GET'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def getQuoteInfo(quote_info_id):
     quote_info = QuoteInfo.query.get(quote_info_id)
     return jsonify(quote_info.serialize())
@@ -266,21 +275,29 @@ def getQuoteInfo(quote_info_id):
 
 # Endpoint belong to Get quote..
 # need quote id to get quote in url.. ex: /quote/19
-@quote_api_blueprint.route('/quote/<int:quote_id>', methods = ['GET'])
-def getQuote(quote_id):
-    quote = Quote.query.get(quote_id)
-    return jsonify(quote.serialize())
+
+@quote_api_blueprint.route('/quote', methods = ['GET'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
+def getQuote(current_user):
+    if current_user.role_id == ADMIN_ROLE:
+        quotes = Quote.query.all()
+        result = [quote.serializeBasic() for quote in quotes]
+        return jsonify(result)
+    quotes = Quote.query.filter_by(user_id=current_user.id)
+    result = [quote.serializeBasic() for quote in quotes]
+    return jsonify(result)
 
 
 # Endpoint belong to Get all quote
-
 @quote_api_blueprint.route('/quotes/', methods = ['GET'])
+@roles_required(ADMIN_ROLE)
 def getAllQuotes():
     quotes = Quote.query.all()
     result = [quote.serialize() for quote in quotes]
     return jsonify(result)
 
 @quote_api_blueprint.route('/unit-quotes/', methods = ['GET'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def getAllUnitQuote():
     unit_quotes = UnitQuote.query.all()
     result = [unit_quotes.serialize() for unit_quotes in unit_quotes]
@@ -288,6 +305,7 @@ def getAllUnitQuote():
 
 
 @quote_api_blueprint.route('/quote-infos/', methods = ['GET'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def getAllQuoteInfo():
     quote_infos = QuoteInfo.query.all()
     result = [quote_infos.serialize() for quote_infos in quote_infos]
@@ -297,6 +315,7 @@ def getAllQuoteInfo():
 # query to get quote by date..
 # Quote by date(single day) by get parameters ex. /quotes-by-date/?date=2023-06-22
 @quote_api_blueprint.route('/quotes-by-date/', methods = ['GET'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def getAllQuoteByDate():
     quotes = Quote.query.filter(func.date(Quote.quote_date)==request.args.get('date') ).all()
     result = [quote.serialize() for quote in quotes]
@@ -304,9 +323,9 @@ def getAllQuoteByDate():
 
 
 
-@quote_api_blueprint.route('/quotes-b/w-date/', methods = ['GET'])
+@quote_api_blueprint.route('/quotes-between-date/', methods = ['GET'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def getAllQuoteBetweenDate():
-    # breakpoint()
     quotes = Quote.query.filter(func.date(Quote.quote_date).between(request.args.get('date'),request.args.get('end'))).all()
     result = [quote.serialize() for quote in quotes]
     return jsonify(result)
@@ -314,7 +333,8 @@ def getAllQuoteBetweenDate():
 
 
 @quote_api_blueprint.route('/quote-upload', methods = ['POST'])
-def uploads3dFile():
+@roles_required(ADMIN_ROLE, USER_ROLE)
+def uploads3dFile(current_user):
     files_arr = []
     if 'files' not in request.files:
         return jsonify({'error': 'No file part'}), 400
@@ -324,7 +344,7 @@ def uploads3dFile():
     if quoteId:
         quote = Quote.query.get(quoteId)
     if not quoteId and quote is None:
-        quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = "[]")
+        quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = "[]",user_id=current_user.id,name = "quote")
         db.session.add(quote)
         db.session.commit()
     non3dFiles = []
@@ -401,7 +421,8 @@ app.config['EXTRACTED_FOLDER'] = EXTRACTED_FOLDER
 
 
 @quote_api_blueprint.route('/upload-zip', methods=['POST'])
-def upload_zip():
+@roles_required(ADMIN_ROLE, USER_ROLE)
+def upload_zip(current_user):
     files_arr = []
     if 'zip-file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
@@ -425,7 +446,7 @@ def upload_zip():
         if quoteId:
             quote = Quote.query.get(quoteId)
         if not quoteId and quote is None:
-            quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = "[]")
+            quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = "[]",user_id=current_user.id,name = "quote")
             db.session.add(quote)
             db.session.commit()
         non3dFiles = []
@@ -464,3 +485,7 @@ def upload_zip():
                 createQuoteInfoAndUnitquote(quote.id, file_data_list)
         addAttachmentsToQuote(quote, non3dFiles,attachFile)
         return jsonify(quote.serialize())
+
+# def updateUidName(quote){
+#     quote
+# }
