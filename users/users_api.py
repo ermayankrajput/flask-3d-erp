@@ -129,7 +129,7 @@ def login():
 @user_api_blueprint.route("/get/user", methods=["GET"])
 @token_required
 def get_current_user(current_user):
-    return jsonify(current_user.serialize())
+    return jsonify({"success":"true","message":"The messange from server","current_user":current_user.serialize()})
 
 
 # @LoginManager.user_loader

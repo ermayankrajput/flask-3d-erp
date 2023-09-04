@@ -102,6 +102,7 @@ class QuoteInfo(db.Model):
                 "x_size" : self.x_size,
                 "y_size": self.y_size,
                 "z_size":self.z_size,
+                "quote_id":self.quote_id,
                 "unit_quotes": unit_quotes,
                 
             }

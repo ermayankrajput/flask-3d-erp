@@ -29,7 +29,7 @@ def token_required(f):
         return  f(current_user, *args, **kwargs)
     return decorated
 
-
+# Return current user if available, else false
 def is_current_user(f):
     @wraps(f)
     def decorated(*args, **kwargs):

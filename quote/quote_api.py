@@ -144,14 +144,25 @@ def createUnitQuote(quote_info_id):
 
 @quote_api_blueprint.route('/unit-quote/', methods = ['PATCH'])
 @roles_required(ADMIN_ROLE, USER_ROLE)
-def updateUnitQuote():
+def updateUnitQuote(current_user):
     unit_quote = UnitQuote.query.get(request.json["id"])
     if unit_quote is None:
         abort(404)
-    else:
+    if current_user.role_id == ADMIN_ROLE:
         db.session.query(UnitQuote).filter_by(id=unit_quote.id).update(request.json)
         db.session.commit()
         return jsonify(unit_quote.serialize())
+    quote_info_id = unit_quote.quote_info_id
+    quote_info = QuoteInfo.query.get(quote_info_id)
+    quote_id = quote_info.quote_id
+    if quote_info_id is None and not quote_info and quote_id is None:
+        return jsonify({"not found"})
+    quote = Quote.query.get(quote_id)
+    if quote.user_id == current_user.id:
+        db.session.query(UnitQuote).filter_by(id=unit_quote.id).update(request.json)
+        db.session.commit()
+        return jsonify({"success":True,"unit_quote":unit_quote.serialize()})
+    return jsonify({"success":False,"unit_quote":"Not Found"})
 
 # Endpoint belong to update quote-info..
 # need quote-info id and to change data..
@@ -164,36 +175,50 @@ def updateUnitQuote():
 
 @quote_api_blueprint.route('/quote-info/', methods = ['PATCH'])
 @roles_required(ADMIN_ROLE, USER_ROLE)
-def updateQuoteInfo():
+def updateQuoteInfo(current_user):
     quote_info = QuoteInfo.query.get(request.json["id"])
     if quote_info is None:
         abort(404)
-    else:
+    if current_user.role_id == ADMIN_ROLE:
         db.session.query(QuoteInfo).filter_by(id=quote_info.id).update(request.json)
         db.session.commit()
         return jsonify(quote_info.serialize())
+    quote_id = quote_info.quote_id
+    if quote_id is None:
+        return jsonify({"not found"})
+    quote = Quote.query.get(quote_id)
+    if quote.user_id == current_user.id:
+        db.session.query(QuoteInfo).filter_by(id=quote_info.id).update(request.json)
+        db.session.commit()
+        return jsonify({"success":True,"quote_info":quote_info.serializeBasic()})
+    return jsonify({"success":False,"quote_info":"Not Found"})
 
 
 # Endpoint belong to update quote..
 # need quote id and to change data..
 # Example-: /quote/
 # in json form 
-#{"id": 4,
+#{"quote_id": 2,
 # "shipping_cost" : .....,
 # }
-#
-#
+
 
 @quote_api_blueprint.route('/quote/', methods = ['PATCH'])
 @roles_required(ADMIN_ROLE, USER_ROLE)
-def updateQuote():
+def updateQuote(current_user): 
     quote = Quote.query.get(request.json["id"])
     if quote is None:
         abort(404)
-    else:
+    if current_user.role_id == ADMIN_ROLE:
         db.session.query(Quote).filter_by(id=quote.id).update(request.json)
         db.session.commit()
-        return jsonify(quote.serialize())
+        return jsonify({"quote":quote.serializeBasic()})
+    if quote.user_id == current_user.id:
+        db.session.query(Quote).filter_by(id=quote.id).update(request.json)
+        db.session.commit()
+        return jsonify({"success":True,"quote":quote.serializeBasic()})
+    return jsonify({"success":False,"quote":"Not Found"})
+
 
 #DELETE REQUEST
 
@@ -208,10 +233,24 @@ def updateQuote():
 
 @quote_api_blueprint.route("/unit-quote/", methods = ["DELETE"])
 @roles_required(ADMIN_ROLE, USER_ROLE)
-def deleteUnitQuote():
-    if UnitQuote.query.filter_by(id=request.json["id"]).delete():
+def deleteUnitQuote(current_user):
+    unit_quote = UnitQuote.query.get(request.json["id"])
+    if unit_quote is None:
+        abort(404)
+    if current_user.role_id == ADMIN_ROLE:
+        UnitQuote.query.filter_by(id=unit_quote.id).delete()
         db.session.commit()
-        return jsonify({"success":True, "response": "Unit Quote deleted","id":request.json["id"]})
+        return jsonify({"success":True, "response": "Unit Quote deleted","id":unit_quote.id})
+    quote_info_id = unit_quote.quote_info_id
+    quote_info = QuoteInfo.query.get(quote_info_id)
+    quote_id = quote_info.quote_id
+    if quote_info_id is None and not quote_info and quote_id is None:
+        return jsonify({"not found"})
+    quote = Quote.query.get(quote_id)
+    if quote.user_id == current_user.id:
+        UnitQuote.query.filter_by(id=unit_quote.id).delete()
+        db.session.commit()
+        return jsonify({"success":True, "response": "Unit Quote deleted","id":unit_quote.id})
     return jsonify({"success":False, "response": "Unit Quote ID: "+ str(request.json["id"]) +" Not Found"})
 
 
@@ -225,10 +264,22 @@ def deleteUnitQuote():
 
 @quote_api_blueprint.route("/quote-info/", methods = ["DELETE"])
 @roles_required(ADMIN_ROLE, USER_ROLE)
-def deleteQuoteInfo():
-    if QuoteInfo.query.filter_by(id=request.json["id"]).delete():
+def deleteQuoteInfo(current_user):
+    quote_info = QuoteInfo.query.get(request.json["id"])
+    if quote_info is None:
+        abort(404)
+    if current_user.role_id == ADMIN_ROLE:
+        QuoteInfo.query.filter_by(id=quote_info.id).delete()
         db.session.commit()
-        return jsonify({"success":True, "response": "Quote Info deleted","id":request.json["id"]})
+        return jsonify({"success":True, "response": "Quote Info deleted","id":quote_info.id})
+    quote_id = quote_info.quote_id
+    if quote_id is None:
+        return jsonify({"not found"})
+    quote = Quote.query.get(quote_id)
+    if quote.user_id == current_user.id:
+        QuoteInfo.query.filter_by(id=quote_info.id).delete()
+        db.session.commit()
+        return jsonify({"success":True, "response": "Quote Info deleted","id":quote_info.id})
     return jsonify({"success":False, "response": "Quote Info ID: "+ str(request.json["id"]) +" Not Found"})
 
 
@@ -241,10 +292,18 @@ def deleteQuoteInfo():
 # }
 @quote_api_blueprint.route("/quote/", methods = ["DELETE"])
 @roles_required(ADMIN_ROLE, USER_ROLE)
-def deleteQuote():
-    if Quote.query.filter_by(id=request.json["id"]).delete():
+def deleteQuote(current_user):
+    quote = Quote.query.get(request.json["id"])
+    if quote is None:
+        abort(404)
+    if current_user.role_id == ADMIN_ROLE:
+        Quote.query.filter_by(id=quote.id).delete()
         db.session.commit()
-        return jsonify({"success":True, "response": "Quote deleted","id":request.json["id"]})
+        return jsonify({"success":True, "response": "Quote deleted","id":quote.id})
+    if quote.user_id == current_user.id:
+        Quote.query.filter_by(id=quote.id).delete()
+        db.session.commit()
+        return jsonify({"success":True, "response": "Quote deleted","id":quote.id})
     return jsonify({"success":False, "response": "Quote ID: "+ str(request.json["id"]) +" Not Found"})
 
 #GET REQUEST
@@ -253,42 +312,69 @@ def deleteQuote():
 # Endpoint belong to Get unit-quote..
 # need unit-quote id to get quote in url..
 
+
 @quote_api_blueprint.route('/unit-quote/<int:unit_quote_id>', methods = ['GET'])
 @roles_required(ADMIN_ROLE, USER_ROLE)
 def getUnitQuote(current_user,unit_quote_id):
     if current_user.role_id == ADMIN_ROLE:
         unit_quote = UnitQuote.query.all()
-        result = [unit_quote.serialize() for unit_quote in unit_quote]
-        return jsonify(result)
+        result = [unit_quote.serializeBasic() for unit_quote in unit_quote]
+        return jsonify({"unit_quote" :result})
     unit_quote = UnitQuote.query.get(unit_quote_id)
-    return jsonify(unit_quote.serialize())
+    quote_info_id = unit_quote.quote_info_id
+    quote_info = QuoteInfo.query.get(quote_info_id)
+    quote_id = quote_info.quote_id
+    if not unit_quote and quote_info_id is None and not quote_info and quote_id is None:
+        return jsonify({"not found"})
+    quote = Quote.query.get(quote_id)
+    if quote.user_id == current_user.id:
+        return jsonify({"unit_quote":unit_quote.serialize()})
+    return jsonify({"Denied"})
 
 # Endpoint belong to Get quote-info..
 # need quote-info id to get quote in url..
 
 @quote_api_blueprint.route('/quote-info/<int:quote_info_id>', methods = ['GET'])
 @roles_required(ADMIN_ROLE, USER_ROLE)
-def getQuoteInfo(quote_info_id):
+def getQuoteInfo(current_user,quote_info_id):
+    if current_user.role_id == ADMIN_ROLE:
+        quote_info = QuoteInfo.query.all()
+        result = [quote_info.serializeBasic() for quote_info in quote_info]
+        return jsonify({"quote_info" :result})
     quote_info = QuoteInfo.query.get(quote_info_id)
-    return jsonify(quote_info.serialize())
+    if quote_info is None:
+        abort(404)
+    quote_id = quote_info.quote_id
+    if quote_id is None:
+        return jsonify({"Not Found"})
+    quote = Quote.query.get(quote_id)
+    if quote.user_id == current_user.id:
+        return jsonify({"quote_info":quote_info.serializeBasic()})
+    return jsonify({"Denied"})
+
+
 
 
 # Endpoint belong to Get quote..
 # need quote id to get quote in url.. ex: /quote/19
 
-@quote_api_blueprint.route('/quote', methods = ['GET'])
+@quote_api_blueprint.route('/quote/<int:quote_id>', methods = ['GET'])
 @roles_required(ADMIN_ROLE, USER_ROLE)
-def getQuote(current_user):
+def getQuote(current_user,quote_id):
     if current_user.role_id == ADMIN_ROLE:
         quotes = Quote.query.all()
         result = [quote.serializeBasic() for quote in quotes]
         return jsonify(result)
-    quotes = Quote.query.filter_by(user_id=current_user.id)
-    result = [quote.serializeBasic() for quote in quotes]
-    return jsonify(result)
+    quote = Quote.query.get(quote_id)
+    if quote is None:
+        abort(404)
+    if quote.user_id == current_user.id:
+        return jsonify({"success":True,"quote":quote.serializeBasic()})
+    return jsonify({"success":False,"quote":"Not Found"})
 
 
 # Endpoint belong to Get all quote
+
 @quote_api_blueprint.route('/quotes/', methods = ['GET'])
 @roles_required(ADMIN_ROLE)
 def getAllQuotes():
