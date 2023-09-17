@@ -418,61 +418,61 @@ def getAllQuoteBetweenDate():
 
 
 
-@quote_api_blueprint.route('/quote-upload', methods = ['POST'])
-@roles_required(ADMIN_ROLE, USER_ROLE)
-def uploads3dFile(current_user):
-    files_arr = []
-    if 'files' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-    files = request.files.getlist("files")
-    quoteId = int(request.form.get('quote-id') or '0')
-    quote = None
-    if quoteId:
-        quote = Quote.query.get(quoteId)
-    if not quoteId and quote is None:
-        quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = "[]",user_id=current_user.id,name = "quote")
-        db.session.add(quote)
-        db.session.commit()
-    non3dFiles = []
-    attachFile = []
-    for file in files:
-        if file.filename == '':
-            return jsonify({'error': 'No selected file'}), 
-        matching3d_files , non3d_matching_files  = filter_files_by_extension(file.filename)
-        if file.filename in non3d_matching_files:
-            attachFile.append(file.filename)
-            uniqueFileName = unique_fileName(file.filename)
-            if not os.path.exists('uploads'):
-                os.makedirs('uploads')
-            file.save(f"uploads/{uniqueFileName}")
-            fileServerPath = 'uploads/' + uniqueFileName
-            non3dFiles.append(fileServerPath)
-    uploadProcess = multiprocessing.Process(target=uploadFileToS3, args=(non3dFiles,))
-    uploadProcess.start()
-    for file in files:
-        matching3d_files,non3d_matching_files = filter_files_by_extension(file.filename)
-        if file.filename in matching3d_files:
-            uniqueFileName = unique_fileName(file.filename)
-            if not os.path.exists('uploads'):
-                os.makedirs('uploads')
-            file.save(f"uploads/{uniqueFileName}")
-            fileServerPath = 'uploads/' + uniqueFileName
-            if not isStl(file.filename):
-                    cadex_Converter(fileServerPath, uniqueFileName+".stl")
-            transport_file = fileServerPath if isStl(file.filename) else str(fileServerPath) + '.stl'
-            file_data_list = {
-                    "file_name": file.filename,
-                    "uploded_file" : fileServerPath,
-                    "transported": transport_file,
-                    "image": fileServerPath+'.png'
-                }
-            # dimensions = stlToImg(fileServerPath, fileServerPath+'.png'), "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))
-            uploadProcess = multiprocessing.Process(target=uploadToS3, args=(fileServerPath, ))
-            uploadProcess.start()
-            files_arr.append(file_data_list)
-            createQuoteInfoAndUnitquote(quote.id, file_data_list)
-    addAttachmentsToQuote(quote, non3dFiles,attachFile)
-    return jsonify(quote.serialize())
+# @quote_api_blueprint.route('/quote-upload', methods = ['POST'])
+# @roles_required(ADMIN_ROLE, USER_ROLE)
+# def uploads3dFile(current_user):
+#     files_arr = []
+#     if 'files' not in request.files:
+#         return jsonify({'error': 'No file part'}), 400
+#     files = request.files.getlist("files")
+#     quoteId = int(request.form.get('quote-id') or '0')
+#     quote = None
+#     if quoteId:
+#         quote = Quote.query.get(quoteId)
+#     if not quoteId and quote is None:
+#         quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = "[]",user_id=current_user.id,name = "quote")
+#         db.session.add(quote)
+#         db.session.commit()
+#     non3dFiles = []
+#     attachFile = []
+#     for file in files:
+#         if file.filename == '':
+#             return jsonify({'error': 'No selected file'}), 
+#         matching3d_files , non3d_matching_files  = filter_files_by_extension(file.filename)
+#         if file.filename in non3d_matching_files:
+#             attachFile.append(file.filename)
+#             uniqueFileName = unique_fileName(file.filename)
+#             if not os.path.exists('uploads'):
+#                 os.makedirs('uploads')
+#             file.save(f"uploads/{uniqueFileName}")
+#             fileServerPath = 'uploads/' + uniqueFileName
+#             non3dFiles.append(fileServerPath)
+#     uploadProcess = multiprocessing.Process(target=uploadFileToS3, args=(non3dFiles,))
+#     uploadProcess.start()
+#     for file in files:
+#         matching3d_files,non3d_matching_files = filter_files_by_extension(file.filename)
+#         if file.filename in matching3d_files:
+#             uniqueFileName = unique_fileName(file.filename)
+#             if not os.path.exists('uploads'):
+#                 os.makedirs('uploads')
+#             file.save(f"uploads/{uniqueFileName}")
+#             fileServerPath = 'uploads/' + uniqueFileName
+#             if not isStl(file.filename):
+#                     cadex_Converter(fileServerPath, uniqueFileName+".stl")
+#             transport_file = fileServerPath if isStl(file.filename) else str(fileServerPath) + '.stl'
+#             file_data_list = {
+#                     "file_name": file.filename,
+#                     "uploded_file" : fileServerPath,
+#                     "transported": transport_file,
+#                     "image": fileServerPath+'.png'
+#                 }
+#             # dimensions = stlToImg(fileServerPath, fileServerPath+'.png'), "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))
+#             uploadProcess = multiprocessing.Process(target=uploadToS3, args=(fileServerPath, ))
+#             uploadProcess.start()
+#             files_arr.append(file_data_list)
+#             createQuoteInfoAndUnitquote(quote.id, file_data_list)
+#     addAttachmentsToQuote(quote, non3dFiles,attachFile)
+#     return jsonify(quote.serialize())
 
 def addAttachmentsToQuote(quote, non3dFiles,attachFile):
     attachments = json.loads(quote.attachments)
@@ -506,72 +506,150 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['EXTRACTED_FOLDER'] = EXTRACTED_FOLDER
 
 
-@quote_api_blueprint.route('/upload-zip', methods=['POST'])
+# @quote_api_blueprint.route('/upload-zip', methods=['POST'])
+# @roles_required(ADMIN_ROLE, USER_ROLE)
+# def upload_zip(current_user):
+#     files_arr = []
+#     if 'zip-file' not in request.files:
+#         return jsonify({'error': 'No file part'}), 400
+#     file = request.files['zip-file']
+#     if file.filename == '':
+#         return jsonify({'error': 'No selected file'}), 400
+
+#     if file and iszip(file.filename):
+#         filename = unique_fileName(file.filename)
+#         upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+#         if not os.path.exists('uploads'):
+#             os.makedirs('uploads')
+#         if not os.path.exists('extracted'):
+#             os.makedirs('extracted')
+#         extracted_path = os.path.join(app.config['EXTRACTED_FOLDER'], filename.rsplit('.', 1)[0]) 
+#         file.save(upload_path)
+#         with zipfile.ZipFile(upload_path, 'r') as zip_ref:
+#             zip_ref.extractall(extracted_path)
+#         quoteId = int(request.form.get('quote-id') or '0')
+#         quote = None
+#         if quoteId:
+#             quote = Quote.query.get(quoteId)
+#         if not quoteId and quote is None:
+#             quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = "[]",user_id=current_user.id,name = "quote")
+#             db.session.add(quote)
+#             db.session.commit()
+#         non3dFiles = []
+#         attachFile = []
+#         for path, subdirs, files in os.walk(extracted_path):
+#             extracted_files = files
+#         for name in extracted_files:
+#             pathWithnames = os.path.join(path, name)
+#             matching3d_files , non3d_matching_files  = filter_files_by_extension(name)
+#             if pathWithnames and  name in non3d_matching_files:
+#                 attachFile.append(name)
+#                 fileServerPath = unique_fileName_with_path(pathWithnames)
+#                 os.rename(pathWithnames, fileServerPath)
+#                 non3dFiles.append(fileServerPath)
+#         uploadProcess = multiprocessing.Process(target=uploadFileToS3, args=(non3dFiles,))
+#         uploadProcess.start()
+#         for name in extracted_files:
+#             pathWithnames = os.path.join(path, name)
+#             matching3d_files , non3d_matching_files  = filter_files_by_extension(name)
+#             if pathWithnames and  name in matching3d_files:
+#                 fileServerPath = unique_fileName_with_path(pathWithnames)
+#                 os.rename(pathWithnames, fileServerPath)
+#                 if not isStl(name):
+#                     cadex_Converter(fileServerPath, fileServerPath+".stl")
+#                 transport_file = fileServerPath if isStl(name) else str(fileServerPath) + '.stl'
+#                 file_data_list = {
+#                     "file_name": name,
+#                     "uploded_file" : fileServerPath,
+#                     "transported": transport_file,
+#                     "image": fileServerPath+'.png'
+#                 }
+#                 # dimensions = stlToImg(fileServerPath, fileServerPath+'.png'), "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))
+#                 uploadProcess = multiprocessing.Process(target=uploadToS3, args=(fileServerPath, ))
+#                 uploadProcess.start()
+#                 files_arr.append(file_data_list)
+#                 createQuoteInfoAndUnitquote(quote.id, file_data_list)
+#         addAttachmentsToQuote(quote, non3dFiles,attachFile)
+#         return jsonify(quote.serialize())
+
+@quote_api_blueprint.route('/quote-upload', methods=['POST'])
 @roles_required(ADMIN_ROLE, USER_ROLE)
-def upload_zip(current_user):
-    files_arr = []
-    if 'zip-file' not in request.files:
+def upload_any(current_user):
+    non3dFiles = []
+    non3dFilenames = []
+    if 'files' not in request.files:
         return jsonify({'error': 'No file part'}), 400
-    file = request.files['zip-file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
-
-    if file and iszip(file.filename):
-        filename = unique_fileName(file.filename)
-        upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    files = request.files.getlist("files")
+    quote = get_or_create_quote(int(request.form.get('quote-id') or '0'), current_user)
+    for file in files:
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'})
+        matching3d_files , non3d_matching_files, zipfile  = filter_files_by_extension(file.filename)
+        uniqueFileName = unique_fileName(file.filename)
         if not os.path.exists('uploads'):
-            os.makedirs('uploads')
-        if not os.path.exists('extracted'):
-            os.makedirs('extracted')
-        extracted_path = os.path.join(app.config['EXTRACTED_FOLDER'], filename.rsplit('.', 1)[0]) 
-        file.save(upload_path)
-        with zipfile.ZipFile(upload_path, 'r') as zip_ref:
-            zip_ref.extractall(extracted_path)
-        quoteId = int(request.form.get('quote-id') or '0')
-        quote = None
-        if quoteId:
-            quote = Quote.query.get(quoteId)
-        if not quoteId and quote is None:
-            quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = "[]",user_id=current_user.id,name = "quote")
-            db.session.add(quote)
-            db.session.commit()
-        non3dFiles = []
-        attachFile = []
-        for path, subdirs, files in os.walk(extracted_path):
-            extracted_files = files
-        for name in extracted_files:
-            pathWithnames = os.path.join(path, name)
-            matching3d_files , non3d_matching_files  = filter_files_by_extension(name)
-            if pathWithnames and  name in non3d_matching_files:
-                attachFile.append(name)
-                fileServerPath = unique_fileName_with_path(pathWithnames)
-                os.rename(pathWithnames, fileServerPath)
-                non3dFiles.append(fileServerPath)
-        uploadProcess = multiprocessing.Process(target=uploadFileToS3, args=(non3dFiles,))
-        uploadProcess.start()
-        for name in extracted_files:
-            pathWithnames = os.path.join(path, name)
-            matching3d_files , non3d_matching_files  = filter_files_by_extension(name)
-            if pathWithnames and  name in matching3d_files:
-                fileServerPath = unique_fileName_with_path(pathWithnames)
-                os.rename(pathWithnames, fileServerPath)
-                if not isStl(name):
-                    cadex_Converter(fileServerPath, fileServerPath+".stl")
-                transport_file = fileServerPath if isStl(name) else str(fileServerPath) + '.stl'
-                file_data_list = {
-                    "file_name": name,
-                    "uploded_file" : fileServerPath,
-                    "transported": transport_file,
-                    "image": fileServerPath+'.png'
-                }
-                # dimensions = stlToImg(fileServerPath, fileServerPath+'.png'), "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))
-                uploadProcess = multiprocessing.Process(target=uploadToS3, args=(fileServerPath, ))
-                uploadProcess.start()
-                files_arr.append(file_data_list)
-                createQuoteInfoAndUnitquote(quote.id, file_data_list)
-        addAttachmentsToQuote(quote, non3dFiles,attachFile)
-        return jsonify(quote.serialize())
+                os.makedirs('uploads')
+        file.save(f"uploads/{uniqueFileName}")
+        fileServerPath = 'uploads/' + uniqueFileName
+        if file.filename in non3d_matching_files:
+            non3dFiles.append(fileServerPath)
+            non3dFilenames.append(file.filename)
+        if file.filename in matching3d_files:
+            handle3dFiles(fileServerPath, file.filename, quote)
+        if file.filename in zipfile:
+            handleZipFile(fileServerPath, file.filename, quote)
+    uploadProcess = multiprocessing.Process(target=uploadFileToS3, args=(non3dFiles,))
+    uploadProcess.start()
+    addAttachmentsToQuote(quote, non3dFiles, non3dFilenames)
+    return jsonify(quote.serialize())
 
-# def updateUidName(quote){
-#     quote
-# }
+# Handle 3D files only
+def handle3dFiles(file, filename, quote):
+    if not isStl(filename):
+        cadex_Converter(file, file +".stl")
+        transport_file = file if isStl(filename) else str(file) + '.stl'
+        file_data_list = {
+                "file_name": filename,
+                "uploded_file" : file,
+                "transported": transport_file,
+                "image": file + '.png'
+            }
+        # dimensions = stlToImg(fileServerPath, fileServerPath+'.png'), "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))
+        uploadProcess = multiprocessing.Process(target=uploadToS3, args=(file, ))
+        uploadProcess.start()
+        createQuoteInfoAndUnitquote(quote.id, file_data_list)
+
+# Handle Zip files only
+def handleZipFile(file, filename, quote):
+    non3dFiles = []
+    non3dFilenames = []
+    if not os.path.exists('uploads/extracted'):
+        os.makedirs('uploads/extracted')
+    extracted_path = os.path.join(app.config['UPLOAD_FOLDER'], app.config['EXTRACTED_FOLDER'], filename.rsplit('.', 1)[0]) 
+    with zipfile.ZipFile(file, 'r') as zip_ref:
+        zip_ref.extractall(extracted_path)
+    for path, subdirs, files in os.walk(extracted_path):
+        extracted_files = files
+    for name in extracted_files:
+        pathWithnames = os.path.join(path, name)
+        matching3d_files , non3d_matching_files, zipfiles  = filter_files_by_extension(name)
+        if pathWithnames and  name in non3d_matching_files or pathWithnames and  name in zipfiles:
+            non3dFilenames.append(name)
+            fileServerPath = unique_fileName_with_path(pathWithnames)
+            os.rename(pathWithnames, fileServerPath)
+            non3dFiles.append(fileServerPath)
+        if pathWithnames and  name in matching3d_files:
+            handle3dFiles(pathWithnames, name, quote)
+    uploadProcess = multiprocessing.Process(target=uploadFileToS3, args=(non3dFiles,))
+    uploadProcess.start()
+    addAttachmentsToQuote(quote, non3dFiles, non3dFilenames)
+
+# Get quote if id is provided else create quote
+def get_or_create_quote(quoteId, user):
+    quote = None
+    if quoteId:
+        quote = Quote.query.get(quoteId)
+    if not quoteId and quote is None:
+        quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = "[]",user_id=user.id,name = "quote")
+        db.session.add(quote)
+        db.session.commit()
+    return quote
