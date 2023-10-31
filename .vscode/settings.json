@@ -4,6 +4,7 @@
         "./quote",
         "./conversion",
         "./conversion",
-        "./conversion"
+        "./conversion",
+        "./users"
     ]
 }

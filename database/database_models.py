@@ -1,12 +1,13 @@
 from functools import wraps
 from flask import Blueprint, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
-from flask_migrate import Migrate
+# from datetime import datetime
+# from flask_migrate import Migrate
 from sqlalchemy import JSON
-# import jwt
 from sqlalchemy.sql import func
 from app import db
+import uuid
+from sqlalchemy.dialects.postgresql import UUID
 # from flask_login import LoginManager, login_manager, login_user
 # from flask_security import Security, SQLAlchemySessionUserDatastore
 # from flask_security import UserMixin, RoleMixin
@@ -21,8 +22,14 @@ class Quote(db.Model):
     grand_total = db.Column(db.Numeric,nullable = True)
     attachments = db.Column(JSON, default=[])
     created_at = db.Column(db.DateTime(timezone=True), default=func.now())
-    updated_at = db.Column(db.DateTime(timezone=True), default=func.now())
+    updated_at = db.Column(db.DateTime(timezone=True), default=func.now(), onupdate=func.now())
+    uuid = db.Column(UUID(as_uuid=True), nullable = True, default=uuid.uuid4)
+    # uuid = db.Column(db.Text(), nullable = True)
+    name = db.Column(db.Text(), nullable = True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'),nullable = True)
+    parent_id = db.Column(db.Integer,db.ForeignKey('quote.id', ondelete='CASCADE'),nullable = True)
     quote_infos = db.relationship('QuoteInfo', backref = 'Quote', cascade="all, delete")
+    versions = db.relationship('Quote', backref=db.backref('parent', remote_side=[id]))
 
 
     def __repr__(self):
@@ -32,13 +39,34 @@ class Quote(db.Model):
         quote_infos = []
         if self.quote_infos:
             quote_infos = [quote_infos.serialize() for quote_infos in self.quote_infos]
+        # if self.versions:
+        #     versions = [versions.serialize() for versions in self.versions]
         return {"id": self.id,
+                "name": self.name,
                 "quote_date": self.quote_date,
                 "validity": self.validity,
                 "shipping_cost":self.shipping_cost,
                 "grand_total": self.grand_total,
                 "attachments":self.attachments,
-                "quote_infos": quote_infos
+                "quote_infos": quote_infos,
+                "uuid": self.uuid,
+                "user_id": self.user_id,
+                "parent_id": self.parent_id, 
+                "versions": len(self.versions)
+                }
+    def serializeBasic(self):
+        return {"id": self.id,
+                "name": self.name,
+                "quote_date": self.quote_date,
+                "validity": self.validity,
+                "shipping_cost":self.shipping_cost,
+                "grand_total": self.grand_total,
+                "attachments":self.attachments,
+                "quote_infos": len(self.quote_infos),
+                "uuid": self.uuid,
+                "user_id": self.user_id,
+                "parent_id": self.parent_id, 
+                "versions": len(self.versions)
                 }
 
 class QuoteInfo(db.Model):
@@ -74,9 +102,24 @@ class QuoteInfo(db.Model):
                 "x_size" : self.x_size,
                 "y_size": self.y_size,
                 "z_size":self.z_size,
+                "quote_id":self.quote_id,
                 "unit_quotes": unit_quotes,
                 
             }
+    def serializeBasic(self):
+        return{"id": self.id,
+                "image_file": self.image_file,
+                "uploded_file" : self.uploded_file,
+                "transported_file":self.transported_file,
+                "material_search":self.material_search,
+                "technique": self.technique,
+                "finishing" : self.finishing,
+                "file_name" : self.file_name,
+                "x_size" : self.x_size,
+                "y_size": self.y_size,
+                "z_size":self.z_size,
+                "unit_quotes": len(self.unit_quotes)
+                }
     
 
 class UnitQuote(db.Model):
@@ -113,6 +156,7 @@ class User(db.Model):
     token = db.Column(db.String(255), nullable=True, unique=True)
     role_id = db.Column(db.Integer(), db.ForeignKey('roles.id', ondelete='CASCADE'))
     roles = db.relationship('Role', backref= 'User')
+    quote = db.relationship('Quote', backref= 'User',cascade="all, delete")
 
 
     def __repr__(self):
@@ -172,4 +216,3 @@ class Role(db.Model):
 
 # with db.app_context():
 #     db.create_all()
-

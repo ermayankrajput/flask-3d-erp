@@ -3,7 +3,7 @@ from flask import Blueprint
 from flask import Flask, abort, jsonify, request
 import os
 import sys
-from helpers.unique_fileName import isStl, allowed_file, unique_fileName
+from helpers.helper_function import isStl, allowed_file, unique_fileName
 from helpers.uploaders import uploadToS3
 from transfers.transfer_function import cadex_Converter
 sys.path.append("conversion/transfer")

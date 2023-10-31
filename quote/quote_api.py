@@ -3,6 +3,7 @@ from flask import Blueprint, Response, abort, request,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime,date
 from sqlalchemy import func
+from users.auth_middleware import ADMIN_ROLE, USER_ROLE, roles_required
 from database.database_models import Quote, QuoteInfo, UnitQuote
 from app import db
 import multiprocessing
@@ -11,7 +12,7 @@ from mesh_converter import meshRun
 import os
 import time
 from dimension import stlToImg
-from helpers.unique_fileName import  filter_files_by_extension, isStl, allowed_file, iszip, unique_fileName, unique_fileName_with_path
+from helpers.helper_function import  filter_files_by_extension, isStl, allowed_file, iszip, unique_fileName, unique_fileName_with_path
 from helpers.uploaders import uploadFileToS3, uploadToS3
 from transfers.transfer_function import cadex_Converter
 import json
@@ -142,16 +143,26 @@ def createUnitQuote(quote_info_id):
 
 
 @quote_api_blueprint.route('/unit-quote/', methods = ['PATCH'])
-def updateUnitQuote():
-    # breakpoint()
+@roles_required(ADMIN_ROLE, USER_ROLE)
+def updateUnitQuote(current_user):
     unit_quote = UnitQuote.query.get(request.json["id"])
-   
     if unit_quote is None:
         abort(404)
-    else:
+    if current_user.role_id == ADMIN_ROLE:
         db.session.query(UnitQuote).filter_by(id=unit_quote.id).update(request.json)
         db.session.commit()
         return jsonify(unit_quote.serialize())
+    quote_info_id = unit_quote.quote_info_id
+    quote_info = QuoteInfo.query.get(quote_info_id)
+    quote_id = quote_info.quote_id
+    if quote_info_id is None and not quote_info and quote_id is None:
+        return jsonify({"not found"})
+    quote = Quote.query.get(quote_id)
+    if quote.user_id == current_user.id:
+        db.session.query(UnitQuote).filter_by(id=unit_quote.id).update(request.json)
+        db.session.commit()
+        return jsonify({"success":True,"unit_quote":unit_quote.serialize()})
+    return jsonify({"success":False,"unit_quote":"Not Found"})
 
 # Endpoint belong to update quote-info..
 # need quote-info id and to change data..
@@ -163,36 +174,51 @@ def updateUnitQuote():
 
 
 @quote_api_blueprint.route('/quote-info/', methods = ['PATCH'])
-def updateQuoteInfo():
+@roles_required(ADMIN_ROLE, USER_ROLE)
+def updateQuoteInfo(current_user):
     quote_info = QuoteInfo.query.get(request.json["id"])
     if quote_info is None:
         abort(404)
-    else:
+    if current_user.role_id == ADMIN_ROLE:
         db.session.query(QuoteInfo).filter_by(id=quote_info.id).update(request.json)
         db.session.commit()
         return jsonify(quote_info.serialize())
+    quote_id = quote_info.quote_id
+    if quote_id is None:
+        return jsonify({"not found"})
+    quote = Quote.query.get(quote_id)
+    if quote.user_id == current_user.id:
+        db.session.query(QuoteInfo).filter_by(id=quote_info.id).update(request.json)
+        db.session.commit()
+        return jsonify({"success":True,"quote_info":quote_info.serializeBasic()})
+    return jsonify({"success":False,"quote_info":"Not Found"})
 
 
 # Endpoint belong to update quote..
 # need quote id and to change data..
 # Example-: /quote/
-# in json form
-#{"id": 4,
+# in json form 
+#{"quote_id": 2,
 # "shipping_cost" : .....,
 # }
-#
-#
+
 
 @quote_api_blueprint.route('/quote/', methods = ['PATCH'])
-def updateQuote():
+@roles_required(ADMIN_ROLE, USER_ROLE)
+def updateQuote(current_user): 
     quote = Quote.query.get(request.json["id"])
     if quote is None:
         abort(404)
-    else:
+    if current_user.role_id == ADMIN_ROLE:
         db.session.query(Quote).filter_by(id=quote.id).update(request.json)
         db.session.commit()
-        # breakpoint()
-        return jsonify(quote.serialize())
+        return jsonify({"quote":quote.serializeBasic()})
+    if quote.user_id == current_user.id:
+        db.session.query(Quote).filter_by(id=quote.id).update(request.json)
+        db.session.commit()
+        return jsonify({"success":True,"quote":quote.serializeBasic()})
+    return jsonify({"success":False,"quote":"Not Found"})
+
 
 #DELETE REQUEST
 
@@ -206,10 +232,25 @@ def updateQuote():
 # }
 
 @quote_api_blueprint.route("/unit-quote/", methods = ["DELETE"])
-def deleteUnitQuote():
-    if UnitQuote.query.filter_by(id=request.json["id"]).delete():
+@roles_required(ADMIN_ROLE, USER_ROLE)
+def deleteUnitQuote(current_user):
+    unit_quote = UnitQuote.query.get(request.json["id"])
+    if unit_quote is None:
+        abort(404)
+    if current_user.role_id == ADMIN_ROLE:
+        UnitQuote.query.filter_by(id=unit_quote.id).delete()
         db.session.commit()
-        return jsonify({"success":True, "response": "Unit Quote deleted","id":request.json["id"]})
+        return jsonify({"success":True, "response": "Unit Quote deleted","id":unit_quote.id})
+    quote_info_id = unit_quote.quote_info_id
+    quote_info = QuoteInfo.query.get(quote_info_id)
+    quote_id = quote_info.quote_id
+    if quote_info_id is None and not quote_info and quote_id is None:
+        return jsonify({"not found"})
+    quote = Quote.query.get(quote_id)
+    if quote.user_id == current_user.id:
+        UnitQuote.query.filter_by(id=unit_quote.id).delete()
+        db.session.commit()
+        return jsonify({"success":True, "response": "Unit Quote deleted","id":unit_quote.id})
     return jsonify({"success":False, "response": "Unit Quote ID: "+ str(request.json["id"]) +" Not Found"})
 
 
@@ -222,10 +263,23 @@ def deleteUnitQuote():
 # }
 
 @quote_api_blueprint.route("/quote-info/", methods = ["DELETE"])
-def deleteQuoteInfo():
-    if QuoteInfo.query.filter_by(id=request.json["id"]).delete():
+@roles_required(ADMIN_ROLE, USER_ROLE)
+def deleteQuoteInfo(current_user):
+    quote_info = QuoteInfo.query.get(request.json["id"])
+    if quote_info is None:
+        abort(404)
+    if current_user.role_id == ADMIN_ROLE:
+        QuoteInfo.query.filter_by(id=quote_info.id).delete()
         db.session.commit()
-        return jsonify({"success":True, "response": "Quote Info deleted","id":request.json["id"]})
+        return jsonify({"success":True, "response": "Quote Info deleted","id":quote_info.id})
+    quote_id = quote_info.quote_id
+    if quote_id is None:
+        return jsonify({"not found"})
+    quote = Quote.query.get(quote_id)
+    if quote.user_id == current_user.id:
+        QuoteInfo.query.filter_by(id=quote_info.id).delete()
+        db.session.commit()
+        return jsonify({"success":True, "response": "Quote Info deleted","id":quote_info.id})
     return jsonify({"success":False, "response": "Quote Info ID: "+ str(request.json["id"]) +" Not Found"})
 
 
@@ -237,10 +291,19 @@ def deleteQuoteInfo():
 # "id":9
 # }
 @quote_api_blueprint.route("/quote/", methods = ["DELETE"])
-def deleteQuote():
-    if Quote.query.filter_by(id=request.json["id"]).delete():
+@roles_required(ADMIN_ROLE, USER_ROLE)
+def deleteQuote(current_user):
+    quote = Quote.query.get(request.json["id"])
+    if quote is None:
+        abort(404)
+    if current_user.role_id == ADMIN_ROLE:
+        Quote.query.filter_by(id=quote.id).delete()
         db.session.commit()
-        return jsonify({"success":True, "response": "Quote deleted","id":request.json["id"]})
+        return jsonify({"success":True, "response": "Quote deleted","id":quote.id})
+    if quote.user_id == current_user.id:
+        Quote.query.filter_by(id=quote.id).delete()
+        db.session.commit()
+        return jsonify({"success":True, "response": "Quote deleted","id":quote.id})
     return jsonify({"success":False, "response": "Quote ID: "+ str(request.json["id"]) +" Not Found"})
 
 #GET REQUEST
@@ -251,36 +314,76 @@ def deleteQuote():
 
 
 @quote_api_blueprint.route('/unit-quote/<int:unit_quote_id>', methods = ['GET'])
-def getUnitQuote(unit_quote_id):
+@roles_required(ADMIN_ROLE, USER_ROLE)
+def getUnitQuote(current_user,unit_quote_id):
+    if current_user.role_id == ADMIN_ROLE:
+        unit_quote = UnitQuote.query.all()
+        result = [unit_quote.serializeBasic() for unit_quote in unit_quote]
+        return jsonify({"unit_quote" :result})
     unit_quote = UnitQuote.query.get(unit_quote_id)
-    return jsonify(unit_quote.serialize())
+    quote_info_id = unit_quote.quote_info_id
+    quote_info = QuoteInfo.query.get(quote_info_id)
+    quote_id = quote_info.quote_id
+    if not unit_quote and quote_info_id is None and not quote_info and quote_id is None:
+        return jsonify({"not found"})
+    quote = Quote.query.get(quote_id)
+    if quote.user_id == current_user.id:
+        return jsonify({"unit_quote":unit_quote.serialize()})
+    return jsonify({"Denied"})
 
 # Endpoint belong to Get quote-info..
 # need quote-info id to get quote in url..
 
 @quote_api_blueprint.route('/quote-info/<int:quote_info_id>', methods = ['GET'])
-def getQuoteInfo(quote_info_id):
+@roles_required(ADMIN_ROLE, USER_ROLE)
+def getQuoteInfo(current_user,quote_info_id):
+    if current_user.role_id == ADMIN_ROLE:
+        quote_info = QuoteInfo.query.all()
+        result = [quote_info.serializeBasic() for quote_info in quote_info]
+        return jsonify({"quote_info" :result})
     quote_info = QuoteInfo.query.get(quote_info_id)
-    return jsonify(quote_info.serialize())
+    if quote_info is None:
+        abort(404)
+    quote_id = quote_info.quote_id
+    if quote_id is None:
+        return jsonify({"Not Found"})
+    quote = Quote.query.get(quote_id)
+    if quote.user_id == current_user.id:
+        return jsonify({"quote_info":quote_info.serializeBasic()})
+    return jsonify({"Denied"})
+
+
 
 
 # Endpoint belong to Get quote..
 # need quote id to get quote in url.. ex: /quote/19
+
 @quote_api_blueprint.route('/quote/<int:quote_id>', methods = ['GET'])
-def getQuote(quote_id):
+@roles_required(ADMIN_ROLE, USER_ROLE)
+def getQuote(current_user,quote_id):
+    if current_user.role_id == ADMIN_ROLE:
+        quotes = Quote.query.all()
+        result = [quote.serializeBasic() for quote in quotes]
+        return jsonify(result)
     quote = Quote.query.get(quote_id)
-    return jsonify(quote.serialize())
+    if quote is None:
+        abort(404)
+    if quote.user_id == current_user.id:
+        return jsonify({"success":True,"quote":quote.serializeBasic()})
+    return jsonify({"success":False,"quote":"Not Found"})
 
 
 # Endpoint belong to Get all quote
 
 @quote_api_blueprint.route('/quotes/', methods = ['GET'])
+@roles_required(ADMIN_ROLE)
 def getAllQuotes():
     quotes = Quote.query.all()
     result = [quote.serialize() for quote in quotes]
     return jsonify(result)
 
 @quote_api_blueprint.route('/unit-quotes/', methods = ['GET'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def getAllUnitQuote():
     unit_quotes = UnitQuote.query.all()
     result = [unit_quotes.serialize() for unit_quotes in unit_quotes]
@@ -288,6 +391,7 @@ def getAllUnitQuote():
 
 
 @quote_api_blueprint.route('/quote-infos/', methods = ['GET'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def getAllQuoteInfo():
     quote_infos = QuoteInfo.query.all()
     result = [quote_infos.serialize() for quote_infos in quote_infos]
@@ -297,6 +401,7 @@ def getAllQuoteInfo():
 # query to get quote by date..
 # Quote by date(single day) by get parameters ex. /quotes-by-date/?date=2023-06-22
 @quote_api_blueprint.route('/quotes-by-date/', methods = ['GET'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def getAllQuoteByDate():
     quotes = Quote.query.filter(func.date(Quote.quote_date)==request.args.get('date') ).all()
     result = [quote.serialize() for quote in quotes]
@@ -304,69 +409,70 @@ def getAllQuoteByDate():
 
 
 
-@quote_api_blueprint.route('/quotes-b/w-date/', methods = ['GET'])
+@quote_api_blueprint.route('/quotes-between-date/', methods = ['GET'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def getAllQuoteBetweenDate():
-    # breakpoint()
     quotes = Quote.query.filter(func.date(Quote.quote_date).between(request.args.get('date'),request.args.get('end'))).all()
     result = [quote.serialize() for quote in quotes]
     return jsonify(result)
 
 
 
-@quote_api_blueprint.route('/quote-upload', methods = ['POST'])
-def uploads3dFile():
-    files_arr = []
-    if 'files' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-    files = request.files.getlist("files")
-    quoteId = int(request.form.get('quote-id') or '0')
-    quote = None
-    if quoteId:
-        quote = Quote.query.get(quoteId)
-    if not quoteId and quote is None:
-        quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = "[]")
-        db.session.add(quote)
-        db.session.commit()
-    non3dFiles = []
-    attachFile = []
-    for file in files:
-        if file.filename == '':
-            return jsonify({'error': 'No selected file'}), 
-        matching3d_files , non3d_matching_files  = filter_files_by_extension(file.filename)
-        if file.filename in non3d_matching_files:
-            attachFile.append(file.filename)
-            uniqueFileName = unique_fileName(file.filename)
-            if not os.path.exists('uploads'):
-                os.makedirs('uploads')
-            file.save(f"uploads/{uniqueFileName}")
-            fileServerPath = 'uploads/' + uniqueFileName
-            non3dFiles.append(fileServerPath)
-    uploadProcess = multiprocessing.Process(target=uploadFileToS3, args=(non3dFiles,))
-    uploadProcess.start()
-    for file in files:
-        matching3d_files,non3d_matching_files = filter_files_by_extension(file.filename)
-        if file.filename in matching3d_files:
-            uniqueFileName = unique_fileName(file.filename)
-            if not os.path.exists('uploads'):
-                os.makedirs('uploads')
-            file.save(f"uploads/{uniqueFileName}")
-            fileServerPath = 'uploads/' + uniqueFileName
-            if not isStl(file.filename):
-                    cadex_Converter(fileServerPath, uniqueFileName+".stl")
-            transport_file = fileServerPath if isStl(file.filename) else str(fileServerPath) + '.stl'
-            file_data_list = {
-                    "file_name": file.filename,
-                    "uploded_file" : fileServerPath,
-                    "transported": transport_file,
-                    "image": fileServerPath+'.png'
-                }
-            # dimensions = stlToImg(fileServerPath, fileServerPath+'.png'), "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))
-            uploadProcess = multiprocessing.Process(target=uploadToS3, args=(fileServerPath, ))
-            uploadProcess.start()
-            files_arr.append(file_data_list)
-            createQuoteInfoAndUnitquote(quote.id, file_data_list)
-    addAttachmentsToQuote(quote, non3dFiles,attachFile)
-    return jsonify(quote.serialize())
+# @quote_api_blueprint.route('/quote-upload', methods = ['POST'])
+# @roles_required(ADMIN_ROLE, USER_ROLE)
+# def uploads3dFile(current_user):
+#     files_arr = []
+#     if 'files' not in request.files:
+#         return jsonify({'error': 'No file part'}), 400
+#     files = request.files.getlist("files")
+#     quoteId = int(request.form.get('quote-id') or '0')
+#     quote = None
+#     if quoteId:
+#         quote = Quote.query.get(quoteId)
+#     if not quoteId and quote is None:
+#         quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = "[]",user_id=current_user.id,name = "quote")
+#         db.session.add(quote)
+#         db.session.commit()
+#     non3dFiles = []
+#     attachFile = []
+#     for file in files:
+#         if file.filename == '':
+#             return jsonify({'error': 'No selected file'}), 
+#         matching3d_files , non3d_matching_files  = filter_files_by_extension(file.filename)
+#         if file.filename in non3d_matching_files:
+#             attachFile.append(file.filename)
+#             uniqueFileName = unique_fileName(file.filename)
+#             if not os.path.exists('uploads'):
+#                 os.makedirs('uploads')
+#             file.save(f"uploads/{uniqueFileName}")
+#             fileServerPath = 'uploads/' + uniqueFileName
+#             non3dFiles.append(fileServerPath)
+#     uploadProcess = multiprocessing.Process(target=uploadFileToS3, args=(non3dFiles,))
+#     uploadProcess.start()
+#     for file in files:
+#         matching3d_files,non3d_matching_files = filter_files_by_extension(file.filename)
+#         if file.filename in matching3d_files:
+#             uniqueFileName = unique_fileName(file.filename)
+#             if not os.path.exists('uploads'):
+#                 os.makedirs('uploads')
+#             file.save(f"uploads/{uniqueFileName}")
+#             fileServerPath = 'uploads/' + uniqueFileName
+#             if not isStl(file.filename):
+#                     cadex_Converter(fileServerPath, uniqueFileName+".stl")
+#             transport_file = fileServerPath if isStl(file.filename) else str(fileServerPath) + '.stl'
+#             file_data_list = {
+#                     "file_name": file.filename,
+#                     "uploded_file" : fileServerPath,
+#                     "transported": transport_file,
+#                     "image": fileServerPath+'.png'
+#                 }
+#             # dimensions = stlToImg(fileServerPath, fileServerPath+'.png'), "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))
+#             uploadProcess = multiprocessing.Process(target=uploadToS3, args=(fileServerPath, ))
+#             uploadProcess.start()
+#             files_arr.append(file_data_list)
+#             createQuoteInfoAndUnitquote(quote.id, file_data_list)
+#     addAttachmentsToQuote(quote, non3dFiles,attachFile)
+#     return jsonify(quote.serialize())
 
 def addAttachmentsToQuote(quote, non3dFiles,attachFile):
     attachments = json.loads(quote.attachments)
@@ -400,67 +506,150 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['EXTRACTED_FOLDER'] = EXTRACTED_FOLDER
 
 
-@quote_api_blueprint.route('/upload-zip', methods=['POST'])
-def upload_zip():
-    files_arr = []
-    if 'zip-file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-    file = request.files['zip-file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
+# @quote_api_blueprint.route('/upload-zip', methods=['POST'])
+# @roles_required(ADMIN_ROLE, USER_ROLE)
+# def upload_zip(current_user):
+#     files_arr = []
+#     if 'zip-file' not in request.files:
+#         return jsonify({'error': 'No file part'}), 400
+#     file = request.files['zip-file']
+#     if file.filename == '':
+#         return jsonify({'error': 'No selected file'}), 400
 
-    if file and iszip(file.filename):
-        filename = unique_fileName(file.filename)
-        upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+#     if file and iszip(file.filename):
+#         filename = unique_fileName(file.filename)
+#         upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+#         if not os.path.exists('uploads'):
+#             os.makedirs('uploads')
+#         if not os.path.exists('extracted'):
+#             os.makedirs('extracted')
+#         extracted_path = os.path.join(app.config['EXTRACTED_FOLDER'], filename.rsplit('.', 1)[0]) 
+#         file.save(upload_path)
+#         with zipfile.ZipFile(upload_path, 'r') as zip_ref:
+#             zip_ref.extractall(extracted_path)
+#         quoteId = int(request.form.get('quote-id') or '0')
+#         quote = None
+#         if quoteId:
+#             quote = Quote.query.get(quoteId)
+#         if not quoteId and quote is None:
+#             quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = "[]",user_id=current_user.id,name = "quote")
+#             db.session.add(quote)
+#             db.session.commit()
+#         non3dFiles = []
+#         attachFile = []
+#         for path, subdirs, files in os.walk(extracted_path):
+#             extracted_files = files
+#         for name in extracted_files:
+#             pathWithnames = os.path.join(path, name)
+#             matching3d_files , non3d_matching_files  = filter_files_by_extension(name)
+#             if pathWithnames and  name in non3d_matching_files:
+#                 attachFile.append(name)
+#                 fileServerPath = unique_fileName_with_path(pathWithnames)
+#                 os.rename(pathWithnames, fileServerPath)
+#                 non3dFiles.append(fileServerPath)
+#         uploadProcess = multiprocessing.Process(target=uploadFileToS3, args=(non3dFiles,))
+#         uploadProcess.start()
+#         for name in extracted_files:
+#             pathWithnames = os.path.join(path, name)
+#             matching3d_files , non3d_matching_files  = filter_files_by_extension(name)
+#             if pathWithnames and  name in matching3d_files:
+#                 fileServerPath = unique_fileName_with_path(pathWithnames)
+#                 os.rename(pathWithnames, fileServerPath)
+#                 if not isStl(name):
+#                     cadex_Converter(fileServerPath, fileServerPath+".stl")
+#                 transport_file = fileServerPath if isStl(name) else str(fileServerPath) + '.stl'
+#                 file_data_list = {
+#                     "file_name": name,
+#                     "uploded_file" : fileServerPath,
+#                     "transported": transport_file,
+#                     "image": fileServerPath+'.png'
+#                 }
+#                 # dimensions = stlToImg(fileServerPath, fileServerPath+'.png'), "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))
+#                 uploadProcess = multiprocessing.Process(target=uploadToS3, args=(fileServerPath, ))
+#                 uploadProcess.start()
+#                 files_arr.append(file_data_list)
+#                 createQuoteInfoAndUnitquote(quote.id, file_data_list)
+#         addAttachmentsToQuote(quote, non3dFiles,attachFile)
+#         return jsonify(quote.serialize())
+
+@quote_api_blueprint.route('/quote-upload', methods=['POST'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
+def upload_any(current_user):
+    non3dFiles = []
+    non3dFilenames = []
+    if 'files' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    files = request.files.getlist("files")
+    quote = get_or_create_quote(int(request.form.get('quote-id') or '0'), current_user)
+    for file in files:
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'})
+        matching3d_files , non3d_matching_files, zipfile  = filter_files_by_extension(file.filename)
+        uniqueFileName = unique_fileName(file.filename)
         if not os.path.exists('uploads'):
-            os.makedirs('uploads')
-        if not os.path.exists('extracted'):
-            os.makedirs('extracted')
-        extracted_path = os.path.join(app.config['EXTRACTED_FOLDER'], filename.rsplit('.', 1)[0]) 
-        file.save(upload_path)
-        with zipfile.ZipFile(upload_path, 'r') as zip_ref:
-            zip_ref.extractall(extracted_path)
-        quoteId = int(request.form.get('quote-id') or '0')
-        quote = None
-        if quoteId:
-            quote = Quote.query.get(quoteId)
-        if not quoteId and quote is None:
-            quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = "[]")
-            db.session.add(quote)
-            db.session.commit()
-        non3dFiles = []
-        attachFile = []
-        for path, subdirs, files in os.walk(extracted_path):
-            extracted_files = files
-        for name in extracted_files:
-            pathWithnames = os.path.join(path, name)
-            matching3d_files , non3d_matching_files  = filter_files_by_extension(name)
-            if pathWithnames and  name in non3d_matching_files:
-                attachFile.append(name)
-                fileServerPath = unique_fileName_with_path(pathWithnames)
-                os.rename(pathWithnames, fileServerPath)
-                non3dFiles.append(fileServerPath)
-        uploadProcess = multiprocessing.Process(target=uploadFileToS3, args=(non3dFiles,))
+                os.makedirs('uploads')
+        file.save(f"uploads/{uniqueFileName}")
+        fileServerPath = 'uploads/' + uniqueFileName
+        if file.filename in non3d_matching_files:
+            non3dFiles.append(fileServerPath)
+            non3dFilenames.append(file.filename)
+        if file.filename in matching3d_files:
+            handle3dFiles(fileServerPath, file.filename, quote)
+        if file.filename in zipfile:
+            handleZipFile(fileServerPath, file.filename, quote)
+    uploadProcess = multiprocessing.Process(target=uploadFileToS3, args=(non3dFiles,))
+    uploadProcess.start()
+    addAttachmentsToQuote(quote, non3dFiles, non3dFilenames)
+    return jsonify(quote.serialize())
+
+# Handle 3D files only
+def handle3dFiles(file, filename, quote):
+    if not isStl(filename):
+        cadex_Converter(file, file +".stl")
+        transport_file = file if isStl(filename) else str(file) + '.stl'
+        file_data_list = {
+                "file_name": filename,
+                "uploded_file" : file,
+                "transported": transport_file,
+                "image": file + '.png'
+            }
+        # dimensions = stlToImg(fileServerPath, fileServerPath+'.png'), "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))
+        uploadProcess = multiprocessing.Process(target=uploadToS3, args=(file, ))
         uploadProcess.start()
-        for name in extracted_files:
-            pathWithnames = os.path.join(path, name)
-            matching3d_files , non3d_matching_files  = filter_files_by_extension(name)
-            if pathWithnames and  name in matching3d_files:
-                fileServerPath = unique_fileName_with_path(pathWithnames)
-                os.rename(pathWithnames, fileServerPath)
-                if not isStl(name):
-                    cadex_Converter(fileServerPath, fileServerPath+".stl")
-                transport_file = fileServerPath if isStl(name) else str(fileServerPath) + '.stl'
-                file_data_list = {
-                    "file_name": name,
-                    "uploded_file" : fileServerPath,
-                    "transported": transport_file,
-                    "image": fileServerPath+'.png'
-                }
-                # dimensions = stlToImg(fileServerPath, fileServerPath+'.png'), "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))
-                uploadProcess = multiprocessing.Process(target=uploadToS3, args=(fileServerPath, ))
-                uploadProcess.start()
-                files_arr.append(file_data_list)
-                createQuoteInfoAndUnitquote(quote.id, file_data_list)
-        addAttachmentsToQuote(quote, non3dFiles,attachFile)
-        return jsonify(quote.serialize())
+        createQuoteInfoAndUnitquote(quote.id, file_data_list)
+
+# Handle Zip files only
+def handleZipFile(file, filename, quote):
+    non3dFiles = []
+    non3dFilenames = []
+    if not os.path.exists('uploads/extracted'):
+        os.makedirs('uploads/extracted')
+    extracted_path = os.path.join(app.config['UPLOAD_FOLDER'], app.config['EXTRACTED_FOLDER'], filename.rsplit('.', 1)[0]) 
+    with zipfile.ZipFile(file, 'r') as zip_ref:
+        zip_ref.extractall(extracted_path)
+    for path, subdirs, files in os.walk(extracted_path):
+        extracted_files = files
+    for name in extracted_files:
+        pathWithnames = os.path.join(path, name)
+        matching3d_files , non3d_matching_files, zipfiles  = filter_files_by_extension(name)
+        if pathWithnames and  name in non3d_matching_files or pathWithnames and  name in zipfiles:
+            non3dFilenames.append(name)
+            fileServerPath = unique_fileName_with_path(pathWithnames)
+            os.rename(pathWithnames, fileServerPath)
+            non3dFiles.append(fileServerPath)
+        if pathWithnames and  name in matching3d_files:
+            handle3dFiles(pathWithnames, name, quote)
+    uploadProcess = multiprocessing.Process(target=uploadFileToS3, args=(non3dFiles,))
+    uploadProcess.start()
+    addAttachmentsToQuote(quote, non3dFiles, non3dFilenames)
+
+# Get quote if id is provided else create quote
+def get_or_create_quote(quoteId, user):
+    quote = None
+    if quoteId:
+        quote = Quote.query.get(quoteId)
+    if not quoteId and quote is None:
+        quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = "[]",user_id=user.id,name = "quote")
+        db.session.add(quote)
+        db.session.commit()
+    return quote
