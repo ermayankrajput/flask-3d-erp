@@ -11,3 +11,4 @@ extracted/
 *.pyc
 *.__pycache__
 quote/__pycache__/quote_api.cpython-310.pyc
+*.pyc

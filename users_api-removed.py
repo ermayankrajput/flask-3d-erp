@@ -9,19 +9,26 @@ from app import app
 from sqlalchemy import func
 from flask_security import roles_accepted
 from flask_jwt_extended import create_access_token
+import bcrypt
 
 
 user_api_blueprint = Blueprint('user_api_blueprint', __name__)
 
+def generateHashedPassword(password):
+    salt = b'$2b$12$zMaf1M1t4VkonfP/AW8maO'
+    return bcrypt.hashpw(password.encode(), salt)
 
-@user_api_blueprint.route('/signup/<int:role_id>/', methods = ['POST'])
-def sign_up(role_id):
+@user_api_blueprint.route('/signup', methods = ['POST'])
+def sign_up():
     user = User.query.filter_by(email=request.json['email']).first()
-    role = Role.query.get(role_id)
+    # role = Role.query.get(role_id)
     if user:
         msg="User already exist"
         return msg 
-    user = User(email='this@gmaill.com', status=1,first_name= 'lol',last_name= 'ji',email_confirmed_at= str(datetime.now()), password='pass123',age = 34,role_id=role.id)
+    
+    # Hashing the password
+    # breakpoint()
+    user = User(email=request.json['email'], status=1, first_name= 'lol',last_name= 'ji',email_confirmed_at= str(datetime.now()), password = generateHashedPassword(request.json['password']).decode(),age = 34,role_id=1)
     db.session.add(user)
     db.session.commit()
     return jsonify(user.serialize())
@@ -80,6 +87,7 @@ def deleteQuote():
 def login():
     # creates dictionary of form data
     auth = request.json
+    
     # breakpoint()
     if not auth or not auth.get('email') or not auth.get('password'):
         
@@ -100,14 +108,14 @@ def login():
             {'WWW-Authenticate' : 'Basic realm ="User does not exist !!"'}
         )
     # breakpoint()
-    if check_password_hash(user.password, auth.get('password')):
+    if user.password == generateHashedPassword(auth.get('password')).decode():
         # generates the JWT Token
+        
         token = jwt.encode({
-            'public_id': user.public_id,
+            'public_id': user.id,
             'exp' : datetime.utcnow() + timedelta(minutes = 30)
-        }, app.config['SECRET_KEY'])
-  
-        return make_response(jsonify({'token' : token.decode('UTF-8')}), 201)
+        }, app.config['SECRET_KEY'], algorithms=["HS256"])
+        return jsonify({'success': True,'token' : token})
     # returns 403 if password is wrong
     return make_response(
         'Could not verify',

@@ -1,5 +1,6 @@
 from functools import wraps
 from flask import Flask, abort,jsonify, request ,Blueprint, send_from_directory
+from flask_login import LoginManager, login_manager, login_user
 # from flask_sqlalchemy import SQLAlchemy
 import os
 # from flask_migrate import Migrate
@@ -42,6 +43,9 @@ def add_header(r):
 
 if __name__ == '__main__':
     app.run()
+    
+    
+
 
 
 # @app.errorhandler(404)
@@ -63,10 +67,12 @@ app.register_blueprint(conv_blueprint)
 from quote.quote_api import quote_api_blueprint
 app.register_blueprint(quote_api_blueprint)
 
-# from helpers.non3d_files_handler import helper_handelnon3dFiles_bluprint
-# app.register_blueprint(helper_handelnon3dFiles_bluprint)
-# from users_api import user_api_blueprint
-# app.register_blueprint(user_api_blueprint)
+from users.users_api import user_api_blueprint
+app.register_blueprint(user_api_blueprint)
+
+# from users.user_role import create_roles, user_role_blueprint
+# app.register_blueprint(user_role_blueprint)
+
 # class quote(db.model):
 #     id = db.Column(db.Integer, primary_key=True)
 #     date = db.Column(db.date,nullable = False)
