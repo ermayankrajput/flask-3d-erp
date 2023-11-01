@@ -27,7 +27,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = '128566299290685828278054891499021371965'
 db = SQLAlchemy(app)
 migrate = Migrate(app, db, compare_type=True)
-db.engine.execute("DROP table alembic_version;")
+with app.app_context():
+    db.engine.execute("DROP table alembic_version;")
 
 # from database.database_models import User
 # decorator factory which invoks update_wrapper() method and passes decorated function as an argument
