@@ -13,7 +13,7 @@ import jwt
 # import multiprocessing
 # from streamlit import caching
 
-
+from sqlalchemy import text
 import trimesh
 
 
@@ -29,7 +29,7 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db, compare_type=True)
 with app.app_context():
     with db.engine.connect() as conn:
-        conn.execute("DROP table alembic_version;")
+        conn.execute(text("DROP table alembic_version;"))
 
 # from database.database_models import User
 # decorator factory which invoks update_wrapper() method and passes decorated function as an argument
