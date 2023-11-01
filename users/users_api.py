@@ -18,7 +18,7 @@ def generateHashedPassword(password):
     salt = b'$2b$12$zMaf1M1t4VkonfP/AW8maO'
     return bcrypt.hashpw(password.encode(), salt)
 
-@user_api_blueprint.route('/signup', methods = ['POST'])
+@user_api_blueprint.route('/signup/', methods = ['POST'])
 def sign_up():
     user = User.query.filter_by(email=request.json['email']).first()
     if user:
@@ -47,7 +47,7 @@ def register_role():
 
 
 
-@user_api_blueprint.route('/user/<int:user_id>', methods = ['GET'])
+@user_api_blueprint.route('/user/<int:user_id>/', methods = ['GET'])
 @roles_required(ADMIN_ROLE, USER_ROLE)
 def getUser(user_id):
     user = User.query.get(user_id)
@@ -57,7 +57,7 @@ def getUser(user_id):
     return jsonify(user.serialize())
 
 
-@user_api_blueprint.route('/user-role/<int:role_id>', methods = ['GET'])
+@user_api_blueprint.route('/user-role/<int:role_id>/', methods = ['GET'])
 @roles_required(ADMIN_ROLE, USER_ROLE)
 def getRole(role_id):
     user = Role.query.get(role_id)
@@ -67,7 +67,7 @@ def getRole(role_id):
 
  
 
-@user_api_blueprint.route('/user', methods = ['PATCH'])
+@user_api_blueprint.route('/user/', methods = ['PATCH'])
 @roles_required(ADMIN_ROLE, USER_ROLE)
 def updateUser():
     user = User.query.get(request.json["id"])
@@ -79,7 +79,7 @@ def updateUser():
         return jsonify(user.serialize())
     
 
-@user_api_blueprint.route("/user", methods = ["DELETE"])
+@user_api_blueprint.route("/user/", methods = ["DELETE"])
 @roles_required(ADMIN_ROLE, USER_ROLE)
 def deleteUser():
     if User.query.filter_by(id=request.json["id"]).delete():
@@ -91,7 +91,7 @@ def deleteUser():
 # route for logging user in
 
 
-@user_api_blueprint.route('/login', methods =['POST'])
+@user_api_blueprint.route('/login/', methods =['POST'])
 def login():
     # creates dictionary of form data
     auth = request.json
@@ -131,7 +131,7 @@ def login():
     )
 
 
-@user_api_blueprint.route("/get/user", methods=["GET"])
+@user_api_blueprint.route("/get/user/", methods=["GET"])
 @token_required
 def get_current_user(current_user):
     return jsonify({"success":"true","message":"The messange from server","current_user":current_user.serialize()})
@@ -158,13 +158,13 @@ def get_current_user(current_user):
 #     return "Done"
 
 
-@user_api_blueprint.route('/access', methods=["GET"])
+@user_api_blueprint.route('/access/', methods=["GET"])
 @roles_required(ADMIN_ROLE, USER_ROLE)
 def teachers(current_user):
     return jsonify(current_user.serialize())
 
 
-@user_api_blueprint.route('/share/<uuid>/<email>', methods = ["POST"] )
+@user_api_blueprint.route('/share/<uuid>/<email>/', methods = ["POST"] )
 @is_current_user
 def shared_user(current_user, email, uuid):
     token = ''
