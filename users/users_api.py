@@ -35,11 +35,12 @@ def sign_up():
 
 @user_api_blueprint.route('/register-role/', methods = ['GET'])
 def register_role():
-    role = Role(id=1, name = 'admin', status = 1)
-    db.session.add(role)
-    role = Role(id=2, name = 'user', status = 1)
-    db.session.commit()
-    return jsonify(role.serialize())
+    # role = Role(id=1, name = 'admin', status = 1)
+    # db.session.add(role)
+    # role = Role(id=2, name = 'user', status = 1)
+    # db.session.commit()
+    roles = Role.query.all()
+    return jsonify(roles.serialize())
 
 
 
