@@ -40,7 +40,9 @@ def register_role():
     # role = Role(id=2, name = 'user', status = 1)
     # db.session.commit()
     roles = Role.query.all()
-    return jsonify(roles.serialize())
+    result = [role.serialize() for role in roles]
+    # return jsonify(role.serialize())
+    return jsonify(result)
 
 
 
