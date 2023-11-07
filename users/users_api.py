@@ -153,8 +153,12 @@ def drop_table_fun():
 
     # Creation operations object
     ops = Operations(mc)
-    ops.drop_table('alembic_version')
-    return jsonify({"success":"true","message":"drop table from server"})
+    
+    try:
+        ops.drop_table('alembic_version')
+    except Exception as ex:
+        print(ex)
+    # return jsonify({"success":"true","message":"drop table from server"})
 
 
 
