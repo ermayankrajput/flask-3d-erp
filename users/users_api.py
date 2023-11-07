@@ -156,7 +156,7 @@ def drop_table_fun():
     
     if ops.drop_table('alembic_version'):
         return jsonify({"success":"true","message":"drop table from server"})
-    # return jsonify({"success":"true","message":"drop table from server"})
+    return jsonify({"success":"true","message":"no table drop from server"})
 
 
 
