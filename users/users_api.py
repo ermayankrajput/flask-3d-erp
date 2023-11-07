@@ -13,6 +13,11 @@ from sqlalchemy import func
 # from flask_jwt_extended import create_access_token, current_user
 import bcrypt
 from alembic import op
+import sqlalchemy
+
+from alembic.migration import MigrationContext
+from alembic.operations import Operations
+
 user_api_blueprint = Blueprint('user_api_blueprint', __name__)
 
 def generateHashedPassword(password):
@@ -139,7 +144,16 @@ def get_current_user(current_user):
 
 @user_api_blueprint.route("/drop-table", methods=["GET"])
 def drop_table_fun():
-    op.drop_table('alembic_version')
+    # Connection
+    connection_string = 'postgresql://postgres:password@demo-postgres.ctaazxcq9s9r.us-east-1.rds.amazonaws.com:5432'
+    engine = sqlalchemy.create_engine(connection_string)
+
+    # Create migration context
+    mc = MigrationContext.configure(engine.connect())
+
+    # Creation operations object
+    ops = Operations(mc)
+    ops.drop_table('alembic_version')
     return jsonify({"success":"true","message":"drop table from server"})
 
 
