@@ -12,6 +12,7 @@ from sqlalchemy import func
 # from flask_security import roles_accepted
 # from flask_jwt_extended import create_access_token, current_user
 import bcrypt
+from alembic import op
 user_api_blueprint = Blueprint('user_api_blueprint', __name__)
 
 def generateHashedPassword(password):
@@ -135,6 +136,12 @@ def login():
 @token_required
 def get_current_user(current_user):
     return jsonify({"success":"true","message":"The messange from server","current_user":current_user.serialize()})
+
+@user_api_blueprint.route("/drop-table", methods=["GET"])
+def drop_table_fun():
+    op.drop_table('alembic_version')
+    return jsonify({"success":"true","message":"drop table from server"})
+
 
 
 # @LoginManager.user_loader
