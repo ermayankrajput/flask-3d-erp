@@ -1,7 +1,7 @@
 import meshio
 import numpy as np
 import matplotlib.pyplot as plt
-
+# Test all
 # Load the STL file
 def stlToImg(stl_file="out.stl", image_file="file.png"):
     # stl_file = 'dragon.stl'  Replace with your STL file path
