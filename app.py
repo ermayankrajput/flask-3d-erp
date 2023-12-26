@@ -26,7 +26,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = '128566299290685828278054891499021371965'
 db = SQLAlchemy(app)
-migrate = Migrate(app, db, compare_type=True)
+migrate = Migrate(app, db)
 with app.app_context():
     with db.engine.connect() as conn:
         conn.execute(text("drop table alembic_version"))
