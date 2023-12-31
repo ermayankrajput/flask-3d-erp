@@ -377,7 +377,7 @@ def getQuote(current_user,quote_id):
 
 @quote_api_blueprint.route('/quotes/', methods = ['GET'])
 @roles_required(ADMIN_ROLE)
-def getAllQuotes():
+def getAllQuotes(current_user):
     quotes = Quote.query.all()
     result = [quote.serialize() for quote in quotes]
     return jsonify(result)
