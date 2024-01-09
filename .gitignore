@@ -13,3 +13,4 @@ extracted/
 quote/__pycache__/quote_api.cpython-310.pyc
 *.pyc
 migrations/versions/*
+*/__pycache__/*

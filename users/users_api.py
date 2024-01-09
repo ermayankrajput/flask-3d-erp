@@ -128,7 +128,7 @@ def login():
             'public_id': user.id,
             'exp' : datetime.utcnow() + timedelta(minutes = 30)
         }, app.config['SECRET_KEY'])
-        return jsonify({'success': True,'token' : token})
+        return jsonify({'success': True,'token' : token, 'user': user.serialize()})
     # returns 403 if password is wrong
     return make_response(
         'Could not verify',
