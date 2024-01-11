@@ -179,7 +179,12 @@ def drop_table_fun():
 #     db.session.commit()
 #     logout_user()
 #     return "Done"
-
+@user_api_blueprint.route('/get/users/', methods=["GET"])
+@roles_required(ADMIN_ROLE)
+def getAllUsers(current_user):
+    users = User.query.all()
+    result = [user.serialize() for user in users]
+    return jsonify(result)
 
 @user_api_blueprint.route('/access/', methods=["GET"])
 @roles_required(ADMIN_ROLE, USER_ROLE)
