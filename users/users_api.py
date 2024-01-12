@@ -246,7 +246,7 @@ def shared_user(current_user, email, uuid):
     return jsonify({'token' : token, 'quote': quote.serialize()})
 
 
-@user_api_blueprint.route('/reset-password/', methods = ["POST"] )
+@user_api_blueprint.route('/change-password/', methods = ["POST"] )
 @roles_required(ADMIN_ROLE, USER_ROLE)
 def resetPassword(current_user):
     new_password = request.json['new_password']
