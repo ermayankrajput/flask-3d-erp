@@ -23,9 +23,21 @@ user_api_blueprint = Blueprint('user_api_blueprint', __name__)
 def generateHashedPassword(password):
     salt = b'$2b$12$zMaf1M1t4VkonfP/AW8maO'
     return bcrypt.hashpw(password.encode(), salt)
+# def check_password(new_password, old_hashed_password):
+    # # Check if the new password matches the old hashed password
+    # if bcrypt.checkpw(new_password.encode(), old_hashed_password):
+    #     print("Password matched successfully.")
+    #     return True
+    # else:
+    #     print("Password does not match.")
+    #     return False
+
+
+
 
 @user_api_blueprint.route('/signup/', methods = ['POST'])
 def sign_up():
+    # breakpoint()
     user = User.query.filter_by(email=request.json['email']).first()
     if user:
         msg="User already exist"
@@ -55,9 +67,10 @@ def register_role():
 
 @user_api_blueprint.route('/user/<int:user_id>/', methods = ['GET'])
 @roles_required(ADMIN_ROLE, USER_ROLE)
-def getUser(user_id):
+def getUser(current_user,user_id):
+    # breakpoint()
     user = User.query.get(user_id)
-    if user:
+    if not user:
         msg="Invalid user Id"
         return msg
     return jsonify(user.serialize())
@@ -65,7 +78,7 @@ def getUser(user_id):
 
 @user_api_blueprint.route('/user-role/<int:role_id>/', methods = ['GET'])
 @roles_required(ADMIN_ROLE, USER_ROLE)
-def getRole(role_id):
+def getRole(current_user,role_id):
     user = Role.query.get(role_id)
     if user is None:
         abort(404)
@@ -75,23 +88,30 @@ def getRole(role_id):
 
 @user_api_blueprint.route('/user/', methods = ['PATCH'])
 @roles_required(ADMIN_ROLE, USER_ROLE)
-def updateUser():
-    user = User.query.get(request.json["id"])
-    if user is None:
-        abort(404)
+def updateUser(current_user):
+    if current_user.role_id== ADMIN_ROLE:
+        user = User.query.get(request.json["id"])
+        if user is None:
+            abort(404)
+        else: 
+            db.session.query(User).filter_by(id=user.id).update(request.json)
+            db.session.commit()
+            return jsonify(user.serialize())
     else:
-        db.session.query(User).filter_by(id=user.id).update(request.json)
+        db.session.query(User).filter_by(id=current_user.id).update(request.json)
         db.session.commit()
-        return jsonify(user.serialize())
+        return jsonify(current_user.serialize())
+
     
 
-@user_api_blueprint.route("/user/", methods = ["DELETE"])
+@user_api_blueprint.route("/user/<int:user_id>/", methods = ["DELETE"])
 @roles_required(ADMIN_ROLE, USER_ROLE)
-def deleteUser():
-    if User.query.filter_by(id=request.json["id"]).delete():
+def deleteUser(current_user,user_id):
+    if current_user.role_id==ADMIN_ROLE or current_user.id==user_id:
+        User.query.filter_by(id=user_id).delete()
         db.session.commit()
-        return jsonify({"success":True, "response": "User deleted","id":request.json["id"]})
-    return jsonify({"success":False, "response": "User ID: "+ str(request.json["id"]) +" Not Found"})
+        return jsonify({"success":True, "response": "User deleted","id":user_id})
+    return jsonify({"success":False, "response": "User ID: "+ str(user_id) +" Not Found"})
 
 
 # route for logging user in
@@ -225,4 +245,33 @@ def shared_user(current_user, email, uuid):
             db.session.commit()
     return jsonify({'token' : token, 'quote': quote.serialize()})
 
+
+@user_api_blueprint.route('/reset-password/', methods = ["POST"] )
+@roles_required(ADMIN_ROLE, USER_ROLE)
+def resetPassword(current_user):
+    new_password = request.json['new_password']
+    if current_user.role_id == ADMIN_ROLE and request.json["id"]:
+        user = User.query.get(request.json["id"])
+        if not user:
+            return jsonify({"success":"false","User":"User not found!"})
+        user.password =  generateHashedPassword(new_password).decode()
+        db.session.commit()
+        return jsonify({"success":"True"})
+    # return jsonify({"sucess":"False","Password":"Not changed!"})
+    old_password= request.json['old_password']
+    if current_user.password == generateHashedPassword(old_password).decode():
+        current_user.password =  generateHashedPassword(new_password).decode()
+        db.session.commit()
+        return jsonify({"success":"True"})
+    return jsonify({"sucess":"False","Password":"Wrong old password, please try again!"})
+
+
+
+
+
+
+
+
+
+        
 
