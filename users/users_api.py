@@ -250,7 +250,7 @@ def shared_user(current_user, email, uuid):
 @roles_required(ADMIN_ROLE, USER_ROLE)
 def resetPassword(current_user):
     new_password = request.json['new_password']
-    if current_user.role_id == ADMIN_ROLE and request.json["id"]:
+    if "id" in request.json and current_user.role_id == ADMIN_ROLE:
         user = User.query.get(request.json["id"])
         if not user:
             return jsonify({"success":"false","User":"User not found!"})
