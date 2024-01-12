@@ -258,8 +258,8 @@ def resetPassword(current_user):
         db.session.commit()
         return jsonify({"success":"True"})
     # return jsonify({"sucess":"False","Password":"Not changed!"})
-    old_password= request.json['old_password']
-    if current_user.password == generateHashedPassword(old_password).decode():
+    password= request.json['password']
+    if current_user.password == generateHashedPassword(password).decode():
         current_user.password =  generateHashedPassword(new_password).decode()
         db.session.commit()
         return jsonify({"success":"True"})
