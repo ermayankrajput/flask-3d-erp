@@ -40,8 +40,8 @@ def sign_up():
     # breakpoint()
     user = User.query.filter_by(email=request.json['email']).first()
     if user:
-        msg="User already exist"
-        return msg 
+        # msg="User already exist"
+        return jsonify({"Success":"False","Message":"User already exit"}) 
     
     # Hashing the password
     user = User(email=request.json['email'], status=1, first_name= request.json['first_name'],last_name=request.json['last_name'],email_confirmed_at= str(datetime.now()), password = generateHashedPassword(request.json['password']).decode(),age = request.json['age'],role_id=request.json['role_id'])
@@ -89,14 +89,18 @@ def getRole(current_user,role_id):
 @user_api_blueprint.route('/user/', methods = ['PATCH'])
 @roles_required(ADMIN_ROLE, USER_ROLE)
 def updateUser(current_user):
-    if current_user.role_id== ADMIN_ROLE:
+    if "id" in request.json and current_user.role_id == ADMIN_ROLE:
         user = User.query.get(request.json["id"])
-        if user is None:
-            abort(404)
+        # breakpoint()
+        if user is None or User.query.filter_by(email = request.json['email']).first():
+            # breakpoint()
+            return jsonify({"success":"flase","Message":"Email already exist or user does not found!"})
         else: 
             db.session.query(User).filter_by(id=user.id).update(request.json)
             db.session.commit()
             return jsonify(user.serialize())
+    elif User.query.filter_by(email = request.json['email']).first():
+        return jsonify({"success":"flase","Message":"Email already exist or user does not found!"})
     else:
         db.session.query(User).filter_by(id=current_user.id).update(request.json)
         db.session.commit()
@@ -160,7 +164,7 @@ def login():
 @user_api_blueprint.route("/get/user/", methods=["GET"])
 @token_required
 def get_current_user(current_user):
-    return jsonify({"success":"true","message":"The messange from server","current_user":current_user.serialize()})
+    return jsonify({"Success":"true","Message":"The messange from server","current_user":current_user.serialize()})
 
 @user_api_blueprint.route("/drop-table", methods=["GET"])
 def drop_table_fun():
@@ -256,13 +260,13 @@ def resetPassword(current_user):
             return jsonify({"success":"false","User":"User not found!"})
         user.password =  generateHashedPassword(new_password).decode()
         db.session.commit()
-        return jsonify({"success":"True"})
+        return jsonify({"success":"True","Message":"Password has been changed successfilly!"})
     # return jsonify({"sucess":"False","Password":"Not changed!"})
     password= request.json['password']
     if current_user.password == generateHashedPassword(password).decode():
         current_user.password =  generateHashedPassword(new_password).decode()
         db.session.commit()
-        return jsonify({"success":"True"})
+        return jsonify({"success":"True","Message":"Password has been changed successfilly!"})
     return jsonify({"sucess":"False","Password":"Wrong old password, please try again!"})
 
 
