@@ -53,9 +53,10 @@ def sign_up():
 
 @user_api_blueprint.route('/register-role/', methods = ['GET'])
 def register_role():
-    role = Role(id=1, name = 'admin', status = 1)
-    db.session.add(role)
-    role = Role(id=2, name = 'user', status = 1)
+    # role = Role(id=1, name = 'admin', status = 1)
+    # db.session.add(role)
+    # role = Role(id=2, name = 'user', status = 1)
+    role = Role(id=3, name = 'superadmin', status = 1)
     db.session.add(role)
     db.session.commit()
     roles = Role.query.all()
