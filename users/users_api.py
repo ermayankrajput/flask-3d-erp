@@ -92,16 +92,17 @@ def getRole(current_user,role_id):
 def updateUser(current_user):
     if "id" in request.json and current_user.role_id == ADMIN_ROLE:
         user = User.query.get(request.json["id"])
+        userByEmail = User.query.filter_by(email = request.json['email']).first()
         # breakpoint()
-        if user is None or User.query.filter_by(email = request.json['email']).first():
+        if user is None or (userByEmail is not None and userByEmail.email != user.email):
             # breakpoint()
-            return jsonify({"success":"flase","Message":"Email already exist or user does not found!"})
+            return jsonify({"success":"false","Message":"Email already exist or user does not found!"})
         else: 
             db.session.query(User).filter_by(id=user.id).update(request.json)
             db.session.commit()
             return jsonify(user.serialize())
-    elif User.query.filter_by(email = request.json['email']).first():
-        return jsonify({"success":"flase","Message":"Email already exist or user does not found!"})
+    # elif not User.query.get(request.json["email"]) == current_user.email:
+    #     return jsonify({"success":"flase","Message":"Email already exist or user does not found!"})
     else:
         db.session.query(User).filter_by(id=current_user.id).update(request.json)
         db.session.commit()
