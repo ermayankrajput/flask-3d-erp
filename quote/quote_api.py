@@ -56,6 +56,11 @@ def upload3dFile():
     uploadProcess.start()
     return jsonify({"Success":True, "file_name":file.filename, "uploded_file":fileServerPath, "transported_file":transported_file, "image_file": fileServerPath+'.png', "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))})
 
+@quote_api_blueprint.route('/create-quote', methods = ['GET'])
+@roles_required(ADMIN_ROLE, USER_ROLE)
+def createUniqueQuote(current_user):
+    quote = get_or_create_quote(int(request.form.get('quote-id') or '0'), current_user)
+    return jsonify({'success':True,'quote':quote.serialize()})
 
 # POST Request
 
@@ -361,24 +366,25 @@ def getQuoteInfo(current_user,quote_info_id):
 @quote_api_blueprint.route('/quote/<int:quote_id>', methods = ['GET'])
 @roles_required(ADMIN_ROLE, USER_ROLE)
 def getQuote(current_user,quote_id):
-    if current_user.role_id == ADMIN_ROLE:
-        quotes = Quote.query.all()
-        result = [quote.serializeBasic() for quote in quotes]
-        return jsonify(result)
     quote = Quote.query.get(quote_id)
+    # breakpoint()
     if quote is None:
         abort(404)
-    if quote.user_id == current_user.id:
-        return jsonify({"success":True,"quote":quote.serializeBasic()})
+    if quote.user_id == current_user.id or current_user.role_id == ADMIN_ROLE:
+        return jsonify({"success":True,"quote":quote.serialize()})
     return jsonify({"success":False,"quote":"Not Found"})
 
 
 # Endpoint belong to Get all quote
 
 @quote_api_blueprint.route('/quotes/', methods = ['GET'])
-@roles_required(ADMIN_ROLE)
+@roles_required(ADMIN_ROLE, USER_ROLE)
 def getAllQuotes(current_user):
-    quotes = Quote.query.all()
+    if current_user.role_id == ADMIN_ROLE:
+        quotes = Quote.query.all()
+        result = [quote.serializeBasic() for quote in quotes]
+        return jsonify(result)
+    quotes = Quote.filter_by(user_id = current_user.id)
     result = [quote.serialize() for quote in quotes]
     return jsonify(result)
 
@@ -577,26 +583,25 @@ app.config['EXTRACTED_FOLDER'] = EXTRACTED_FOLDER
 def upload_any(current_user):
     non3dFiles = []
     non3dFilenames = []
-    if 'files' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-    files = request.files.getlist("files")
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'})
+    file = request.files['file']
     quote = get_or_create_quote(int(request.form.get('quote-id') or '0'), current_user)
-    for file in files:
-        if file.filename == '':
-            return jsonify({'error': 'No selected file'})
-        matching3d_files , non3d_matching_files, zipfile  = filter_files_by_extension(file.filename)
-        uniqueFileName = unique_fileName(file.filename)
-        if not os.path.exists('uploads'):
-                os.makedirs('uploads')
-        file.save(f"uploads/{uniqueFileName}")
-        fileServerPath = 'uploads/' + uniqueFileName
-        if file.filename in non3d_matching_files:
-            non3dFiles.append(fileServerPath)
-            non3dFilenames.append(file.filename)
-        if file.filename in matching3d_files:
-            handle3dFiles(fileServerPath, file.filename, quote)
-        if file.filename in zipfile:
-            handleZipFile(fileServerPath, file.filename, quote)
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'})
+    matching3d_files , non3d_matching_files, zipfile  = filter_files_by_extension(file.filename)
+    uniqueFileName = unique_fileName(file.filename)
+    if not os.path.exists('uploads'):
+            os.makedirs('uploads')
+    file.save(f"uploads/{uniqueFileName}")
+    fileServerPath = 'uploads/' + uniqueFileName
+    if file.filename in non3d_matching_files:
+        non3dFiles.append(fileServerPath)
+        non3dFilenames.append(file.filename)
+    if file.filename in matching3d_files:
+        handle3dFiles(fileServerPath, file.filename, quote)
+    if file.filename in zipfile:
+        handleZipFile(fileServerPath, file.filename, quote)
     uploadProcess = multiprocessing.Process(target=uploadFileToS3, args=(non3dFiles,))
     uploadProcess.start()
     addAttachmentsToQuote(quote, non3dFiles, non3dFilenames)
@@ -604,6 +609,12 @@ def upload_any(current_user):
 
 # Handle 3D files only
 def handle3dFiles(file, filename, quote):
+    file_data_list = {
+        "file_name": filename,
+        "uploded_file" : file,
+        "transported": file,
+        "image": file + '.png'
+    }
     if not isStl(filename):
         cadex_Converter(file, file +".stl")
         transport_file = file if isStl(filename) else str(file) + '.stl'
@@ -613,10 +624,10 @@ def handle3dFiles(file, filename, quote):
                 "transported": transport_file,
                 "image": file + '.png'
             }
-        # dimensions = stlToImg(fileServerPath, fileServerPath+'.png'), "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))
-        uploadProcess = multiprocessing.Process(target=uploadToS3, args=(file, ))
-        uploadProcess.start()
-        createQuoteInfoAndUnitquote(quote.id, file_data_list)
+    # dimensions = stlToImg(fileServerPath, fileServerPath+'.png'), "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))
+    uploadProcess = multiprocessing.Process(target=uploadToS3, args=(file, ))
+    uploadProcess.start()
+    createQuoteInfoAndUnitquote(quote.id, file_data_list)
 
 # Handle Zip files only
 def handleZipFile(file, filename, quote):

@@ -6,7 +6,7 @@ def uploadToS3(filePath):
         s3_upload(filePath, filePath + '.stl')
     s3_upload(filePath, filePath + '.png')
     s3_upload(filePath, filePath)
-    
+    emptyUploadFolder()
     return
 
 
