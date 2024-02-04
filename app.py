@@ -21,7 +21,7 @@ import trimesh
 # from mesh_converter import meshRun
 
 # app = Flask(__name__, static_folder='transported')
-app = Flask(__name__, static_folder='uploads')
+app = Flask(__name__, static_folder='temp-uploads')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = '128566299290685828278054891499021371965'
@@ -79,4 +79,8 @@ def responseTransportedFile(filename):
 
 @app.route('/uploads/<path:filename>', methods=['GET', 'POST'])
 def responseTransportedImgFile(filename):
+    send_from_directory(app.static_folder, filename)
+
+@app.route('/temp-uploads/<path:filename>', methods=['GET', 'POST'])
+def responseTempImgFile(filename):
     send_from_directory(app.static_folder, filename)
