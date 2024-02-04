@@ -682,7 +682,8 @@ def get_or_create_quote(quoteId, user):
 
 @quote_api_blueprint.route('/save-enquiries', methods=['POST'])
 def enquery():
-    enquiries = Enquiry(user_data =  json.dumps(request.get_json()['user_data']),quote_data = json.dumps(request.get_json()['quote_data']) ,images = json.dumps(request.get_json()['images']))
+    data = json.loads(request.data)
+    enquiries = Enquiry(user_data =  json.dumps(data['user_data']),quote_data = json.dumps(data['quote_data']) ,images = json.dumps(data['images']))
     db.session.add(enquiries)
     db.session.commit()
     return jsonify(enquiries.serialize())
@@ -690,11 +691,11 @@ def enquery():
 
 @quote_api_blueprint.route('/remove-web-upload', methods=['POST'])
 def deleteUploads():
-    uploads = request.get_json().get('path')
-    if not 'path' in uploads:
-        return jsonify({"success" : False, "path" : uploads , "message":"File not deleted successfully"})
-    os.remove(os.path.join(uploads))
-    return jsonify({"success" : True, "path" : uploads , "message":"File deleted successfully"})
+    jsonP = json.loads(request.data)
+    if not 'path' in jsonP:
+        return jsonify({"success" : False, "path" : jsonP.get('path') , "message":"File not deleted successfully"})
+    os.remove(os.path.join(jsonP.get('path') ))
+    return jsonify({"success" : True, "path" : jsonP.get('path') , "message":"File deleted successfully"})
 
 
 
@@ -711,3 +712,17 @@ def getEnquiry(enquiry_id):
     if enquiry is None:
         abort(401)
     return jsonify({"success": True, "enquiries":enquiry.serialize()})
+
+
+@quote_api_blueprint.route('/enquiry', methods=['DELETE'])
+def deleteEnquiry():
+    enquiry = Enquiry.query.get(request.json["id"])
+    # breakpoint()
+    if enquiry is None:
+        abort(401)
+    else :
+        Enquiry.query.filter_by(id=enquiry.id).delete()
+        db.session.commit()
+        return jsonify({"success":True, "response": "Unit Quote deleted","id":enquiry.id})
+
+    
