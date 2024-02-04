@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime,date
 from sqlalchemy import func
 from users.auth_middleware import ADMIN_ROLE, USER_ROLE, roles_required
-from database.database_models import Quote, QuoteInfo, UnitQuote
+from database.database_models import Quote, QuoteInfo, UnitQuote, Enquiry
 from app import db
 import multiprocessing
 from multiprocessing import Pool
@@ -666,7 +666,6 @@ def stencilUpload():
     fileServerPath = '/temp-uploads/' + uniqueFileName
     return jsonify(fileServerPath)
     
-    
 
 # Get quote if id is provided else create quote
 def get_or_create_quote(quoteId, user):
@@ -678,3 +677,37 @@ def get_or_create_quote(quoteId, user):
         db.session.add(quote)
         db.session.commit()
     return quote
+
+
+
+@quote_api_blueprint.route('/save-enquiries', methods=['POST'])
+def enquery():
+    enquiries = Enquiry(user_data =  json.dumps(request.get_json()['user_data']),quote_data = json.dumps(request.get_json()['quote_data']) ,images = json.dumps(request.get_json()['images']))
+    db.session.add(enquiries)
+    db.session.commit()
+    return jsonify(enquiries.serialize())
+
+
+@quote_api_blueprint.route('/remove-web-upload', methods=['POST'])
+def deleteUploads():
+    uploads = request.get_json().get('path')
+    if not 'path' in uploads:
+        return jsonify({"success" : False, "path" : uploads , "message":"File not deleted successfully"})
+    os.remove(os.path.join(uploads))
+    return jsonify({"success" : True, "path" : uploads , "message":"File deleted successfully"})
+
+
+
+@quote_api_blueprint.route('/enquiries', methods=['GET'])
+def allEnquiry():
+    enquiries = Enquiry.query.all()
+    result = [enquiries.serialize() for enquiries in enquiries]
+    return jsonify(result)
+
+
+@quote_api_blueprint.route('/enquiry/<int:enquiry_id>', methods=['GET'])
+def getEnquiry(enquiry_id):
+    enquiry = Enquiry.query.get(enquiry_id)
+    if enquiry is None:
+        abort(401)
+    return jsonify({"success": True, "enquiries":enquiry.serialize()})

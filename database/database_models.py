@@ -216,3 +216,28 @@ class Role(db.Model):
 
 # with db.app_context():
 #     db.create_all()
+class Enquiry(db.Model):
+     __tablename__ = 'enquiries'
+     id = db.Column(db.Integer(), primary_key=True)
+     created_at = db.Column(db.DateTime(timezone=True), default=func.now())
+     updated_at = db.Column(db.DateTime(timezone=True), default=func.now())
+     status = db.Column(db.Integer(), nullable=False, server_default='1')
+     images = db.Column(JSON, default=[])
+     quote_data = db.Column(JSON, default=[])
+     user_data = db.Column(JSON, default=[])
+     uuid = db.Column(UUID(as_uuid=True), nullable = True, default=uuid.uuid4)
+
+     def __repr__(self):
+        return "<Enquiry %r>" % self.name
+     
+     def serialize(self):
+        return{"id":self.id,
+               "status":self.status,
+               "created_at":self.created_at,
+               "images": self.images,
+              "quote_data":self.quote_data,
+               "user_data":self.user_data,
+               "uuid": self.uuid
+
+            #    "updated_at":self.updated_at
+        }
