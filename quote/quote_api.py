@@ -654,6 +654,20 @@ def handleZipFile(file, filename, quote):
     uploadProcess.start()
     addAttachmentsToQuote(quote, non3dFiles, non3dFilenames)
 
+@quote_api_blueprint.route('/web-upload', methods=['POST'])
+def stencilUpload():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file available'})
+    file = request.files['file']
+    if not os.path.exists('temp-uploads'):
+        os.makedirs('temp-uploads')
+    uniqueFileName = unique_fileName(file.filename)
+    file.save(f"temp-uploads/{uniqueFileName}")
+    fileServerPath = '/temp-uploads/' + uniqueFileName
+    return jsonify(fileServerPath)
+    
+    
+
 # Get quote if id is provided else create quote
 def get_or_create_quote(quoteId, user):
     quote = None
