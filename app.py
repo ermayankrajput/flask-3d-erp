@@ -47,7 +47,7 @@ def add_header(r):
     return r
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(ssl_context=("cert.pem", "key.pem"))
 
 from converted.conv import conv_blueprint
 app.register_blueprint(conv_blueprint)
