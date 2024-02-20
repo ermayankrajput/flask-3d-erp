@@ -17,6 +17,10 @@ from sqlalchemy import text
 import trimesh
 from flask_cors import CORS
 
+from OpenSSL import SSL
+context = SSL.Context(SSL.PROTOCOL_TLSv1_2)
+context.use_privatekey_file('key.pem')
+context.use_certificate_file('cert.pem')
 
 # from mesh_converter import meshRun
 
@@ -47,7 +51,7 @@ def add_header(r):
     return r
 
 if __name__ == '__main__':
-    app.run(ssl_context=("cert.pem", "key.pem"))
+    app.run(ssl_context=context)
 
 from converted.conv import conv_blueprint
 app.register_blueprint(conv_blueprint)
