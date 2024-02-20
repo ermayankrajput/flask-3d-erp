@@ -654,7 +654,7 @@ def handleZipFile(file, filename, quote):
     uploadProcess.start()
     addAttachmentsToQuote(quote, non3dFiles, non3dFilenames)
 
-@quote_api_blueprint.route('/web-upload', methods=['POST'])
+@quote_api_blueprint.route('/web-upload', methods=[['GET'],'POST'])
 def stencilUpload():
     if 'file' not in request.files:
         return jsonify({'error': 'No file available'})
