@@ -18,7 +18,7 @@ import trimesh
 from flask_cors import CORS
 
 from OpenSSL import SSL
-context = SSL.Context(SSL.PROTOCOL_TLSv1_2)
+context = SSL.Context(SSL.TLSv1_2_METHOD)
 context.use_privatekey_file('key.pem')
 context.use_certificate_file('cert.pem')
 
