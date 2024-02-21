@@ -658,12 +658,12 @@ def handleZipFile(file, filename, quote):
 def stencilUpload():
     _data = request.headers
     print("this is form data")
-    print(_data)
+    # print(_data)
     print(request.data)
-    print(request.args)
-    print(request.form)
-    print(request.endpoint)
-    print(request.method)
+    # print(request.args)
+    # print(request.form)
+    # print(request.endpoint)
+    # print(request.method)
     file = request.files.get('file')
     print(file)
     if 'file' not in request.files:
