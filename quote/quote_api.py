@@ -656,7 +656,7 @@ def handleZipFile(file, filename, quote):
 
 @quote_api_blueprint.route('/web-upload', methods=['GET','POST'])
 def stencilUpload():
-    _data = request.form.to_dict(flat=False)
+    _data = request.to_dict(flat=False)
     print("this is form data")
     print(_data)
     file = request.files.get('file')
