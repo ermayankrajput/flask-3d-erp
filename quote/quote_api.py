@@ -660,8 +660,8 @@ def stencilUpload():
     print("this is form data")
     # print(_data)
     print(request.data)
-    print(request.body)
     print(request.files)
+    breakpoint()
     file = request.files.get('file')
     print(file)
     if 'file' not in request.files:
