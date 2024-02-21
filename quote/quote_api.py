@@ -660,11 +660,6 @@ def stencilUpload():
     print("this is form data")
     # print(_data)
     print(request.data)
-    print("request.data.get('file')")
-    # print(request.files['file'])
-    print('json request')
-    print('file' not in request.data.encode())
-    # print(request.method)
     file = request.files.get('file')
     print(file)
     if 'file' not in request.files:
