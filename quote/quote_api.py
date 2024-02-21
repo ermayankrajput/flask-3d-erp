@@ -661,10 +661,11 @@ def stencilUpload():
     # print(_data)
     print(request.data)
     print(request.files)
-    breakpoint()
+    # breakpoint()
     file = request.files.get('file')
-    print(file)
+    # print(file)
     if 'file' not in request.files:
+        print("there is no file a")
         return jsonify({'error': 'No file available'})
     file = request.files['file']
     if not os.path.exists('temp-uploads'):
