@@ -46,7 +46,7 @@ def add_header(r):
     r.headers["Expires"] = "0"
     r.headers['Cache-Control'] = 'public, max-age=0'
     r.headers['Access-Control-Allow-Headers'] = 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token, x-access-token'
-    # r.headers['Access-Control-Allow-Origin'] = '*'
+    r.headers['Access-Control-Allow-Origin'] = '*'
     r.headers['Access-Control-Allow-Methods'] = "GET, POST, PUT, DELETE, OPTIONS"
     return r
 
