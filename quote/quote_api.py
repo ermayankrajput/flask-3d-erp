@@ -663,7 +663,7 @@ def stencilUpload():
     print("request.data.get('file')")
     print(request.files)
     print('json request')
-    print('file' not in request.data)
+    print('file' not in request.data.encode())
     # print(request.method)
     file = request.files.get('file')
     print(file)
