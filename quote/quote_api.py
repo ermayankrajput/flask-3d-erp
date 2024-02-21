@@ -661,7 +661,7 @@ def stencilUpload():
     # print(_data)
     print(request.data)
     print("request.data.get('file')")
-    print(json.loads(request.data))
+    print(json.loads(str(request.data)))
     # print(request.form)
     # print(request.endpoint)
     # print(request.method)
