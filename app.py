@@ -15,13 +15,18 @@ from flask_migrate import Migrate
 
 from sqlalchemy import text
 import trimesh
+from flask_cors import CORS
 
-
+from OpenSSL import SSL
+context = SSL.Context(SSL.TLSv1_2_METHOD)
+context.use_privatekey_file('key.pem')
+context.use_certificate_file('cert.pem')
 
 # from mesh_converter import meshRun
 
 # app = Flask(__name__, static_folder='transported')
 app = Flask(__name__, static_folder='temp-uploads')
+# CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = '128566299290685828278054891499021371965'
@@ -42,11 +47,11 @@ def add_header(r):
     r.headers['Cache-Control'] = 'public, max-age=0'
     r.headers['Access-Control-Allow-Headers'] = 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token, x-access-token'
     r.headers['Access-Control-Allow-Origin'] = '*'
-    r.headers['Access-Control-Allow-Methods'] = '*'
+    r.headers['Access-Control-Allow-Methods'] = "GET, POST, PUT, DELETE, OPTIONS"
     return r
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(ssl_context=context)
 
 from converted.conv import conv_blueprint
 app.register_blueprint(conv_blueprint)
