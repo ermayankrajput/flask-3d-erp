@@ -1,7 +1,8 @@
 import trimesh
 import os
 from dimension import stlToImg
-
+import meshio
+fileServerPath = "dragon.stl"
 def meshRun(queue,fileServerPath):
     print(fileServerPath)
     ret = queue.get()

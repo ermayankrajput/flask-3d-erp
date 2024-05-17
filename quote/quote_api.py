@@ -9,6 +9,7 @@ from app import db
 import multiprocessing
 from multiprocessing import Pool
 from mesh_converter import meshRun
+from new import save_stl_image
 import os
 import time
 from dimension import stlToImg
@@ -33,7 +34,6 @@ def upload3dFile():
                 os.makedirs('uploads')
             file.save(f"uploads/{uniqueFileName}")
             fileServerPath = 'uploads/' + uniqueFileName
-    breakpoint()
     while not os.path.exists(fileServerPath):
         print('file not saved yet')
         time.sleep(1)
@@ -46,15 +46,16 @@ def upload3dFile():
         ret = {'success': False, "converted_file": ""}
         queue = multiprocessing.Queue()
         queue.put(ret)
-        p = multiprocessing.Process(target=meshRun, args=(queue,fileServerPath,))
+        p = multiprocessing.Process(target=save_stl_image, args=(queue,fileServerPath,))
         p.start()
         p.join()
         queueInfo  = queue.get()
+    # breakpoint()
     transported_file = fileServerPath if isStl(file.filename)else str(fileServerPath) + '.stl'
-    dimensions = stlToImg(fileServerPath, fileServerPath+'.png')
+    # dimensions = save_stl_image(fileServerPath)
     uploadProcess = multiprocessing.Process(target=uploadToS3, args=(fileServerPath, ))
     uploadProcess.start()
-    return jsonify({"Success":True, "file_name":file.filename, "uploded_file":fileServerPath, "transported_file":transported_file, "image_file": fileServerPath+'.png', "x":str(dimensions.get("x")), "y":str(dimensions.get("y")), "z":str(dimensions.get("z"))})
+    return jsonify({"Success":True, "file_name":file.filename, "uploded_file":fileServerPath, "transported_file":transported_file, "image_file": fileServerPath+'.png', "x":str(queueInfo[0]), "y":str(queueInfo[1]), "z":str(queueInfo[2])})
 
 @quote_api_blueprint.route('/create-quote', methods = ['GET'])
 @roles_required(ADMIN_ROLE, USER_ROLE)

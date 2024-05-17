@@ -1,6 +1,6 @@
 from functools import wraps
 from flask import Flask, abort,jsonify, request ,Blueprint, send_from_directory
-from flask_login import LoginManager, login_manager, login_user
+# from flask_login import LoginManager, login_manager, login_user
 # from flask_sqlalchemy import SQLAlchemy
 import os
 # from flask_migrate import Migrate
@@ -8,7 +8,7 @@ import os
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from flask_migrate import Migrate
-import jwt
+# import jwt
 # from flask_seeder import FlaskSeeder
 # import multiprocessing
 # from streamlit import caching
