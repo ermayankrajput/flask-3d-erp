@@ -2,9 +2,9 @@ from s3_upload import s3_upload
 import os
 
 def uploadToS3(filePath):
-    if not filePath.split(".")[-1] in ['stl', "STL"]:
-        s3_upload(filePath, filePath + '.stl')
-    s3_upload(filePath, filePath + '.png')
+    # if not filePath.split(".")[-1] in ['stl', "STL"]:
+        # s3_upload(filePath, filePath + '.stl')
+    s3_upload(filePath + '.jpg', filePath + '.jpg')
     s3_upload(filePath, filePath)
     emptyUploadFolder()
     return

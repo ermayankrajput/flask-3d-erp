@@ -6,6 +6,8 @@ from database.database_models import Role, User
 from datetime import datetime, timedelta
 USER_ROLE = 2
 ADMIN_ROLE = 1
+SUPERADMIN_ROLE = 3
+VENDOR = 4
 
 def token_required(f):
     @wraps(f)

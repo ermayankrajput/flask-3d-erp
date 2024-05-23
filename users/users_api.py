@@ -5,7 +5,7 @@ from flask import abort, jsonify, make_response, request,Blueprint
 # from flask_login import LoginManager, login_required, logout_user
 import jwt
 # from  werkzeug.security import generate_password_hash, check_password_hash
-from users.auth_middleware import generate_token, token_required, roles_required, ADMIN_ROLE, USER_ROLE, is_current_user
+from users.auth_middleware import generate_token, token_required, roles_required, ADMIN_ROLE, USER_ROLE, is_current_user, SUPERADMIN_ROLE
 from database.database_models import Quote, QuoteInfo, UnitQuote, User,Role,db
 from app import app 
 from sqlalchemy import func
@@ -35,7 +35,7 @@ def generateHashedPassword(password):
 
 
 
-@user_api_blueprint.route('/signup/', methods = ['POST'])
+@user_api_blueprint.route('/signup', methods = ['POST'])
 def sign_up():
     # breakpoint()
     user = User.query.filter_by(email=request.json['email']).first()
@@ -51,12 +51,15 @@ def sign_up():
 
 
 
-@user_api_blueprint.route('/register-role/', methods = ['GET'])
+@user_api_blueprint.route('/register-role', methods = ['GET'])
 def register_role():
-    # role = Role(id=1, name = 'admin', status = 1)
-    # db.session.add(role)
-    # role = Role(id=2, name = 'user', status = 1)
+    role = Role(id=1, name = 'admin', status = 1)
+    db.session.add(role)
+    role = Role(id=2, name = 'user', status = 1)
+    db.session.add(role)
     role = Role(id=3, name = 'superadmin', status = 1)
+    db.session.add(role)
+    role = Role(id=4, name = 'vendor', status = 1)
     db.session.add(role)
     db.session.commit()
     roles = Role.query.all()
@@ -66,8 +69,8 @@ def register_role():
 
 
 
-@user_api_blueprint.route('/user/<int:user_id>/', methods = ['GET'])
-@roles_required(ADMIN_ROLE, USER_ROLE)
+@user_api_blueprint.route('/user/<int:user_id>', methods = ['GET'])
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE)
 def getUser(current_user,user_id):
     # breakpoint()
     user = User.query.get(user_id)
@@ -76,9 +79,19 @@ def getUser(current_user,user_id):
         return msg
     return jsonify(user.serialize())
 
+@user_api_blueprint.route('/user/email/<email>', methods = ['GET'])
+# @roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE)
+def getUserByEmail(email):
+    # breakpoint()
+    # user = User.query.get(user_id)
+    user = User.query.filter_by(email = email).first()
+    if not user:
+        return jsonify({"success":False, "response": "User found"})
+    return jsonify({"success":True, "response": "User not found", "user":user.serialize()})
 
-@user_api_blueprint.route('/user-role/<int:role_id>/', methods = ['GET'])
-@roles_required(ADMIN_ROLE, USER_ROLE)
+
+@user_api_blueprint.route('/user-role/<int:role_id>', methods = ['GET'])
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE)
 def getRole(current_user,role_id):
     user = Role.query.get(role_id)
     if user is None:
@@ -87,8 +100,8 @@ def getRole(current_user,role_id):
 
  
 
-@user_api_blueprint.route('/user/', methods = ['PATCH'])
-@roles_required(ADMIN_ROLE, USER_ROLE)
+@user_api_blueprint.route('/user', methods = ['PATCH'])
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE)
 def updateUser(current_user):
     if "id" in request.json and current_user.role_id == ADMIN_ROLE:
         user = User.query.get(request.json["id"])
@@ -110,8 +123,8 @@ def updateUser(current_user):
 
     
 
-@user_api_blueprint.route("/user/<int:user_id>/", methods = ["DELETE"])
-@roles_required(ADMIN_ROLE, USER_ROLE)
+@user_api_blueprint.route("/user/<int:user_id>", methods = ["DELETE"])
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE)
 def deleteUser(current_user,user_id):
     if current_user.role_id==ADMIN_ROLE or current_user.id==user_id:
         User.query.filter_by(id=user_id).delete()
@@ -123,7 +136,7 @@ def deleteUser(current_user,user_id):
 # route for logging user in
 
 
-@user_api_blueprint.route('/login/', methods =['POST'])
+@user_api_blueprint.route('/login', methods =['POST'])
 def login():
     # creates dictionary of form data
     auth = request.json
@@ -163,7 +176,7 @@ def login():
     )
 
 
-@user_api_blueprint.route("/get/user/", methods=["GET"])
+@user_api_blueprint.route("/get/user", methods=["GET"])
 @token_required
 def get_current_user(current_user):
     return jsonify({"Success":"true","Message":"The messange from server","current_user":current_user.serialize()})
@@ -205,55 +218,56 @@ def drop_table_fun():
 #     db.session.commit()
 #     logout_user()
 #     return "Done"
-@user_api_blueprint.route('/get/users/', methods=["GET"])
-@roles_required(ADMIN_ROLE)
+@user_api_blueprint.route('/get/users', methods=["GET"])
+@roles_required(ADMIN_ROLE,SUPERADMIN_ROLE)
 def getAllUsers(current_user):
     users = User.query.all()
     result = [user.serialize() for user in users]
     return jsonify(result)
 
-@user_api_blueprint.route('/access/', methods=["GET"])
-@roles_required(ADMIN_ROLE, USER_ROLE)
+@user_api_blueprint.route('/access', methods=["GET"])
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE)
 def teachers(current_user):
     return jsonify(current_user.serialize())
 
 
-@user_api_blueprint.route('/share/<uuid>/<email>/', methods = ["POST"] )
+@user_api_blueprint.route('/share/<uuid>/<email>', methods = ["POST"] )
 @is_current_user
 def shared_user(current_user, email, uuid):
     token = ''
+    # breakpoint()
     if not current_user:
         if not email:
             return False
         user = User.query.filter_by(email = email).first()
         if not user:
-            user = User(email=email, status=1,email_confirmed_at= str(datetime.now()), role_id=2)
+            user = User(email=email, status=1,email_confirmed_at= str(datetime.now()), role_id=4)
             db.session.add(user)
             db.session.commit()
         current_user = user
-        token = generate_token(current_user)
-        if not uuid:
-            return False
-        old_quote = Quote.query.filter_by(uuid = uuid).first()
-        quote = Quote.query.filter_by(parent_id = old_quote.id, user_id = current_user.id).first()
-        if quote:
-            return jsonify({'token' : token, 'quote': quote.serialize()})
-        quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = old_quote.attachments, user_id = current_user.id, parent_id = old_quote.id,)
-        db.session.add(quote)
+    token = generate_token(current_user)
+    if not uuid:
+        return False
+    old_quote = Quote.query.filter_by(uuid = uuid).first()
+    quote = Quote.query.filter_by(parent_id = old_quote.id, user_id = current_user.id).first()
+    if quote:
+        return jsonify({'token' : token, 'quote': quote.serialize()})
+    quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = old_quote.attachments, user_id = current_user.id, parent_id = old_quote.id,)
+    db.session.add(quote)
+    db.session.commit()
+    old_quoteinfos = QuoteInfo.query.filter_by(quote_id = old_quote.id)
+    for quoteinfo in old_quoteinfos:
+        quoteinfo = QuoteInfo(uploded_file = quoteinfo.uploded_file ,file_name = quoteinfo.file_name,transported_file =quoteinfo.transported_file ,material_search = quoteinfo.material_search,technique = quoteinfo.technique,finishing = quoteinfo.finishing,x_size = quoteinfo.x_size,y_size= quoteinfo.y_size,z_size = quoteinfo.z_size,quote_id = quote.id,image_file=quoteinfo.image_file)
+        db.session.add(quoteinfo)
         db.session.commit()
-        old_quoteinfos = QuoteInfo.query.filter_by(quote_id = old_quote.id)
-        for quoteinfo in old_quoteinfos:
-            quoteinfo = QuoteInfo(uploded_file = quoteinfo.uploded_file ,file_name = quoteinfo.file_name,transported_file =quoteinfo.transported_file ,material_search = quoteinfo.material_search,technique = quoteinfo.technique,finishing = quoteinfo.finishing,x_size = quoteinfo.x_size,y_size= quoteinfo.y_size,z_size = quoteinfo.z_size,quote_id = quote.id,image_file=quoteinfo.image_file)
-            db.session.add(quoteinfo)
-            db.session.commit()
-            unitquote = UnitQuote(unit_price = None,quantity = None,lead_time=None,quote_info_id=quoteinfo.id)
-            db.session.add(unitquote)
-            db.session.commit()
-    return jsonify({'token' : token, 'quote': quote.serialize()})
+        unitquote = UnitQuote(unit_price = None,quantity = None,lead_time=None,quote_info_id=quoteinfo.id)
+        db.session.add(unitquote)
+        db.session.commit()
+    return jsonify({'user' : current_user.serialize(),'token' : token, 'quote': quote.serialize()})
 
 
-@user_api_blueprint.route('/change-password/', methods = ["POST"] )
-@roles_required(ADMIN_ROLE, USER_ROLE)
+@user_api_blueprint.route('/change-password', methods = ["POST"] )
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE)
 def resetPassword(current_user):
     new_password = request.json['new_password']
     if "id" in request.json and current_user.role_id == ADMIN_ROLE:
