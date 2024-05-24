@@ -251,7 +251,7 @@ def shared_user(current_user, email, uuid):
     old_quote = Quote.query.filter_by(uuid = uuid).first()
     quote = Quote.query.filter_by(parent_id = old_quote.id, user_id = current_user.id).first()
     if quote:
-        return jsonify({'token' : token, 'quote': quote.serialize()})
+        return jsonify({'user' : current_user.serialize(),'token' : token, 'quote': quote.serialize()})
     quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = old_quote.attachments, user_id = current_user.id, parent_id = old_quote.id,)
     db.session.add(quote)
     db.session.commit()

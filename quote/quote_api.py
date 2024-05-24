@@ -150,7 +150,7 @@ def createUnitQuote(quote_info_id):
 
 
 @quote_api_blueprint.route('/unit-quote', methods = ['PATCH'])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE, VENDOR)
 def updateUnitQuote(current_user):
     unit_quote = UnitQuote.query.get(request.json["id"])
     if unit_quote is None:
@@ -376,6 +376,17 @@ def getQuote(current_user,quote_id):
         return jsonify({"success":True,"quote":quote.serialize()})
     return jsonify({"success":False,"quote":"Not Found"})
 
+@quote_api_blueprint.route('/quote-versions/<int:quote_id>', methods = ['GET'])
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE)
+def getQuoteVersions(current_user,quote_id):
+    quote = Quote.query.get(quote_id)
+    # breakpoint()
+    if quote is None:
+        abort(404)
+    if quote.user_id == current_user.id or current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE:
+        return jsonify({"success":True,"quote":quote.serializeAdvance()})
+    return jsonify({"success":False,"quote":"Not Found"})
+
 
 # Endpoint belong to Get all quote
 
@@ -383,7 +394,7 @@ def getQuote(current_user,quote_id):
 @roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE, VENDOR)
 def getAllQuotes(current_user):
     if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE:
-        quotes = Quote.query.all()
+        quotes = Quote.query.filter_by(parent_id = None).all()
         result = [quote.serializeBasic() for quote in quotes]
         return jsonify(result)
     quotes = Quote.filter_by(user_id = current_user.id)

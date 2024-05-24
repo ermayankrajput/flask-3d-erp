@@ -68,6 +68,30 @@ class Quote(db.Model):
                 "parent_id": self.parent_id, 
                 "versions": len(self.versions)
                 }
+    def serializeAdvance(self):
+        quote_infos = []
+        if self.quote_infos:
+            quote_infos = [quote_infos.serialize() for quote_infos in self.quote_infos]
+        versions = []
+        if self.versions:
+            versions = [versions.serializeAdvance() for versions in self.versions]
+        user = {}
+        if self.user_id:
+            user = User.query.get(self.user_id).serialize()
+        return {"id": self.id,
+                "name": self.name,
+                "quote_date": self.quote_date,
+                "validity": self.validity,
+                "shipping_cost":self.shipping_cost,
+                "grand_total": self.grand_total,
+                "attachments":self.attachments,
+                "quote_infos": quote_infos,
+                "uuid": self.uuid,
+                "user_id": self.user_id,
+                "user": user,
+                "parent_id": self.parent_id, 
+                "versions": versions
+                }
 
 class QuoteInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -78,6 +102,7 @@ class QuoteInfo(db.Model):
     technique = db. Column(db.String(100), nullable = True)
     finishing = db. Column(db.String(100), nullable = True)
     file_name = db.Column(db.Text(), nullable = True)
+    color = db.Column(db.Text(), nullable = True)
     x_size = db.Column(db.Numeric,nullable = True)
     y_size = db.Column(db.Numeric,nullable = True)
     z_size = db.Column(db.Numeric,nullable = True)
@@ -104,7 +129,7 @@ class QuoteInfo(db.Model):
                 "z_size":self.z_size,
                 "quote_id":self.quote_id,
                 "unit_quotes": unit_quotes,
-                
+                "color": self.color
             }
     def serializeBasic(self):
         return{"id": self.id,
@@ -118,15 +143,16 @@ class QuoteInfo(db.Model):
                 "x_size" : self.x_size,
                 "y_size": self.y_size,
                 "z_size":self.z_size,
-                "unit_quotes": len(self.unit_quotes)
+                "unit_quotes": len(self.unit_quotes),
+                "color": self.color
                 }
     
 
 class UnitQuote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     unit_price = db.Column(db.Numeric,nullable = True)
-    quantity = db.Column(db.Integer,nullable = True)
-    lead_time = db.Column(db.Integer,nullable = True)
+    quantity = db.Column(db.Integer,nullable = True, server_default='1')
+    lead_time = db.Column(db.Integer,nullable = True, server_default='1')
     quote_info_id = db.Column(db.Integer, db.ForeignKey('quote_info.id', ondelete='CASCADE'))
 
     def __repr__(self):

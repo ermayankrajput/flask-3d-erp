@@ -16,3 +16,4 @@ migrations/versions/*
 */__pycache__/*
 temp-uploads/*
 venv
+migrations
