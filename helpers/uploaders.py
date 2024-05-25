@@ -6,7 +6,7 @@ def uploadToS3(filePath):
         # s3_upload(filePath, filePath + '.stl')
     s3_upload(filePath + '.jpg', filePath + '.jpg')
     s3_upload(filePath, filePath)
-    emptyUploadFolder()
+    # emptyUploadFolder()
     return
 
 
@@ -19,7 +19,7 @@ def emptyUploadFolder():
 def uploadFileToS3(file):
     for i  in range(len(file)):
         s3_upload(file[i],file[i])
-    emptyUploadFolder()
+    # emptyUploadFolder()
     return
 
 # def get_user_role(): 
