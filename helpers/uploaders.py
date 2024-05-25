@@ -19,6 +19,7 @@ def emptyUploadFolder():
 def uploadFileToS3(file):
     for i  in range(len(file)):
         s3_upload(file[i],file[i])
+    emptyUploadFolder()
     return
 
 # def get_user_role(): 
