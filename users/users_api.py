@@ -252,17 +252,19 @@ def shared_user(current_user, email, uuid):
     quote = Quote.query.filter_by(parent_id = old_quote.id, user_id = current_user.id).first()
     if quote:
         return jsonify({'user' : current_user.serialize(),'token' : token, 'quote': quote.serialize()})
-    quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = old_quote.attachments, user_id = current_user.id, parent_id = old_quote.id,)
+    quote = Quote(quote_date = str(datetime.now()), validity = old_quote.validity, shipping_cost = old_quote.shipping_cost, grand_total = None, attachments = old_quote.attachments, user_id = current_user.id, parent_id = old_quote.id, customer_name = old_quote.customer_name, customer_company = old_quote.customer_company, customer_address = old_quote.customer_address, customer_email = old_quote.customer_email, customer_designation = old_quote.customer_designation, customer_phone = old_quote.customer_phone)
     db.session.add(quote)
     db.session.commit()
     old_quoteinfos = QuoteInfo.query.filter_by(quote_id = old_quote.id)
     for quoteinfo in old_quoteinfos:
-        quoteinfo = QuoteInfo(uploded_file = quoteinfo.uploded_file ,file_name = quoteinfo.file_name,transported_file =quoteinfo.transported_file ,material_search = quoteinfo.material_search,technique = quoteinfo.technique,finishing = quoteinfo.finishing,x_size = quoteinfo.x_size,y_size= quoteinfo.y_size,z_size = quoteinfo.z_size,quote_id = quote.id,image_file=quoteinfo.image_file)
+        old_unitquotes = UnitQuote.query.filter_by(quote_info_id = quoteinfo.id)
+        quoteinfo = QuoteInfo(uploded_file = quoteinfo.uploded_file ,file_name = quoteinfo.file_name,transported_file =quoteinfo.transported_file ,material_search = quoteinfo.material_search,technique = quoteinfo.technique,finishing = quoteinfo.finishing,x_size = quoteinfo.x_size,y_size= quoteinfo.y_size,z_size = quoteinfo.z_size,quote_id = quote.id,image_file=quoteinfo.image_file, color= quoteinfo.color)
         db.session.add(quoteinfo)
         db.session.commit()
-        unitquote = UnitQuote(unit_price = None,quantity = None,lead_time=None,quote_info_id=quoteinfo.id)
-        db.session.add(unitquote)
-        db.session.commit()
+        for old_unitquote in old_unitquotes:
+            unitquote = UnitQuote(unit_price = None,quantity = old_unitquote.quantity,lead_time=old_unitquote.lead_time,quote_info_id=quoteinfo.id)
+            db.session.add(unitquote)
+            db.session.commit()
     return jsonify({'user' : current_user.serialize(),'token' : token, 'quote': quote.serialize()})
 
 
