@@ -52,7 +52,8 @@ def generate_json(file_data):
 
 def filter_files_by_extension(file):
     # matching_extensions = {"stp", "step", "igs", "iges", "stl"}
-    matching_3d_extensions = {"stp", "stl", "STL", "step", "catpart", "igs", "iges", "prt", "sat", "sldprt", "x_t", "STP", "STEP", "CATPART", "IGS", "IGES", "PRT", "SAT", "SLDPRT", "X_T"}
+    matching_3d_extensions = {"stl", "STL"}
+    # matching_3d_extensions = {"stp", "stl", "STL", "step", "catpart", "igs", "iges", "prt", "sat", "sldprt", "x_t", "STP", "STEP", "CATPART", "IGS", "IGES", "PRT", "SAT", "SLDPRT", "X_T"}
     zip_extension = {"zip", "ZIP"}
     matching3d_files = []
     non3d_matching_files = []

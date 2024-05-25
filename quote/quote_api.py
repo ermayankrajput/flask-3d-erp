@@ -592,7 +592,7 @@ app.config['EXTRACTED_FOLDER'] = EXTRACTED_FOLDER
 #         return jsonify(quote.serialize())
 
 @quote_api_blueprint.route('/quote-upload', methods=['POST'])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE)
 def upload_any(current_user):
     non3dFiles = []
     non3dFilenames = []
