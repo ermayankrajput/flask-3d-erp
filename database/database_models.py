@@ -24,7 +24,12 @@ class Quote(db.Model):
     created_at = db.Column(db.DateTime(timezone=True), default=func.now())
     updated_at = db.Column(db.DateTime(timezone=True), default=func.now(), onupdate=func.now())
     uuid = db.Column(UUID(as_uuid=True), nullable = True, default=uuid.uuid4)
-    # uuid = db.Column(db.Text(), nullable = True)
+    customer_name = db.Column(db.Text(), nullable = True)
+    customer_company = db.Column(db.Text(), nullable = True)
+    customer_address = db.Column(db.Text(), nullable = True)
+    customer_email = db.Column(db.Text(), nullable = True)
+    customer_designation = db.Column(db.Text(), nullable = True)
+    customer_phone = db.Column(db.Text(), nullable = True)
     name = db.Column(db.Text(), nullable = True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'),nullable = True)
     parent_id = db.Column(db.Integer,db.ForeignKey('quote.id', ondelete='CASCADE'),nullable = True)
@@ -52,7 +57,13 @@ class Quote(db.Model):
                 "uuid": self.uuid,
                 "user_id": self.user_id,
                 "parent_id": self.parent_id, 
-                "versions": len(self.versions)
+                "versions": len(self.versions),
+                "customer_name": self.customer_name,
+                "customer_company": self.customer_company,
+                "customer_address": self.customer_address,
+                "customer_email": self.customer_email,
+                "customer_designation": self.customer_designation,
+                "customer_phone": self.customer_phone
                 }
     def serializeBasic(self):
         return {"id": self.id,
@@ -66,7 +77,13 @@ class Quote(db.Model):
                 "uuid": self.uuid,
                 "user_id": self.user_id,
                 "parent_id": self.parent_id, 
-                "versions": len(self.versions)
+                "versions": len(self.versions),
+                "customer_name": self.customer_name,
+                "customer_company": self.customer_company,
+                "customer_address": self.customer_address,
+                "customer_email": self.customer_email,
+                "customer_designation": self.customer_designation,
+                "customer_phone": self.customer_phone
                 }
     def serializeAdvance(self):
         quote_infos = []
@@ -90,7 +107,13 @@ class Quote(db.Model):
                 "user_id": self.user_id,
                 "user": user,
                 "parent_id": self.parent_id, 
-                "versions": versions
+                "versions": versions,
+                "customer_name": self.customer_name,
+                "customer_company": self.customer_company,
+                "customer_address": self.customer_address,
+                "customer_email": self.customer_email,
+                "customer_designation": self.customer_designation,
+                "customer_phone": self.customer_phone
                 }
 
 class QuoteInfo(db.Model):
