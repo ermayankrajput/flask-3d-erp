@@ -103,7 +103,7 @@ def getRole(current_user,role_id):
 @user_api_blueprint.route('/user', methods = ['PATCH'])
 @roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE)
 def updateUser(current_user):
-    if "id" in request.json and current_user.role_id == ADMIN_ROLE:
+    if "id" in request.json and current_user.role_id == ADMIN_ROLE  or current_user.role_id == SUPERADMIN_ROLE:
         user = User.query.get(request.json["id"])
         userByEmail = User.query.filter_by(email = request.json['email']).first()
         # breakpoint()
@@ -165,7 +165,7 @@ def login():
        
         token = jwt.encode({
             'public_id': user.id,
-            'exp' : datetime.utcnow() + timedelta(minutes = 3600)
+            'exp' : datetime.utcnow() + timedelta(minutes = 43200)
         }, app.config['SECRET_KEY'])
         return jsonify({'success': True,'token' : token, 'user': user.serialize()})
     # returns 403 if password is wrong

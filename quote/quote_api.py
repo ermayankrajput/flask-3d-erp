@@ -132,7 +132,7 @@ def createUnitQuote(quote_info_id):
     if quoteInfo is None:
         abort(404)
     else:
-        unitquote = UnitQuote(unit_price = None,quantity = None,lead_time=None,quote_info_id=quoteInfo.id)
+        unitquote = UnitQuote(unit_price = 0,quantity = 1,lead_time=None,quote_info_id=quoteInfo.id)
         db.session.add(unitquote)
         db.session.commit()
         return jsonify(unitquote.serialize())

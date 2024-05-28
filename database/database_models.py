@@ -20,22 +20,18 @@ class Quote(db.Model):
     validity = db.Column(db.Integer,nullable = True)
     shipping_cost = db.Column(db.Numeric,nullable = True)
     grand_total = db.Column(db.Numeric,nullable = True)
+    usd_to_rmb = db.Column(db.Numeric,nullable = True)
+    commission = db.Column(db.Numeric,nullable = True)
     attachments = db.Column(JSON, default=[])
     created_at = db.Column(db.DateTime(timezone=True), default=func.now())
     updated_at = db.Column(db.DateTime(timezone=True), default=func.now(), onupdate=func.now())
     uuid = db.Column(UUID(as_uuid=True), nullable = True, default=uuid.uuid4)
-    customer_name = db.Column(db.Text(), nullable = True)
-    customer_company = db.Column(db.Text(), nullable = True)
-    customer_address = db.Column(db.Text(), nullable = True)
-    customer_email = db.Column(db.Text(), nullable = True)
-    customer_designation = db.Column(db.Text(), nullable = True)
-    customer_phone = db.Column(db.Text(), nullable = True)
     name = db.Column(db.Text(), nullable = True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'),nullable = True)
     parent_id = db.Column(db.Integer,db.ForeignKey('quote.id', ondelete='CASCADE'),nullable = True)
     quote_infos = db.relationship('QuoteInfo', backref = 'Quote', cascade="all, delete")
     versions = db.relationship('Quote', backref=db.backref('parent', remote_side=[id]))
-
+    client_id = db.Column(db.Integer, nullable = True)
 
     def __repr__(self):
         return "<Quote %r>" % self.grand_total
@@ -51,6 +47,8 @@ class Quote(db.Model):
                 "quote_date": self.quote_date,
                 "validity": self.validity,
                 "shipping_cost":self.shipping_cost,
+                "usd_to_rmb": self.usd_to_rmb,
+                "commission": self.commission,
                 "grand_total": self.grand_total,
                 "attachments":self.attachments,
                 "quote_infos": quote_infos,
@@ -58,12 +56,6 @@ class Quote(db.Model):
                 "user_id": self.user_id,
                 "parent_id": self.parent_id, 
                 "versions": len(self.versions),
-                "customer_name": self.customer_name,
-                "customer_company": self.customer_company,
-                "customer_address": self.customer_address,
-                "customer_email": self.customer_email,
-                "customer_designation": self.customer_designation,
-                "customer_phone": self.customer_phone
                 }
     def serializeBasic(self):
         return {"id": self.id,
@@ -72,18 +64,14 @@ class Quote(db.Model):
                 "validity": self.validity,
                 "shipping_cost":self.shipping_cost,
                 "grand_total": self.grand_total,
+                "usd_to_rmb": self.usd_to_rmb,
+                "commission": self.commission,
                 "attachments":self.attachments,
                 "quote_infos": len(self.quote_infos),
                 "uuid": self.uuid,
                 "user_id": self.user_id,
                 "parent_id": self.parent_id, 
                 "versions": len(self.versions),
-                "customer_name": self.customer_name,
-                "customer_company": self.customer_company,
-                "customer_address": self.customer_address,
-                "customer_email": self.customer_email,
-                "customer_designation": self.customer_designation,
-                "customer_phone": self.customer_phone
                 }
     def serializeAdvance(self):
         quote_infos = []
@@ -100,6 +88,8 @@ class Quote(db.Model):
                 "quote_date": self.quote_date,
                 "validity": self.validity,
                 "shipping_cost":self.shipping_cost,
+                "usd_to_rmb": self.usd_to_rmb,
+                "commission": self.commission,
                 "grand_total": self.grand_total,
                 "attachments":self.attachments,
                 "quote_infos": quote_infos,
@@ -108,12 +98,6 @@ class Quote(db.Model):
                 "user": user,
                 "parent_id": self.parent_id, 
                 "versions": versions,
-                "customer_name": self.customer_name,
-                "customer_company": self.customer_company,
-                "customer_address": self.customer_address,
-                "customer_email": self.customer_email,
-                "customer_designation": self.customer_designation,
-                "customer_phone": self.customer_phone
                 }
 
 class QuoteInfo(db.Model):
@@ -174,8 +158,8 @@ class QuoteInfo(db.Model):
 class UnitQuote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     unit_price = db.Column(db.Numeric,nullable = True)
-    quantity = db.Column(db.Integer,nullable = True, server_default='1')
-    lead_time = db.Column(db.Integer,nullable = True, server_default='1')
+    quantity = db.Column(db.Integer,nullable = True, default='1')
+    lead_time = db.Column(db.Integer,nullable = True, default='1')
     quote_info_id = db.Column(db.Integer, db.ForeignKey('quote_info.id', ondelete='CASCADE'))
 
     def __repr__(self):
@@ -206,7 +190,14 @@ class User(db.Model):
     role_id = db.Column(db.Integer(), db.ForeignKey('roles.id', ondelete='CASCADE'))
     roles = db.relationship('Role', backref= 'User')
     quote = db.relationship('Quote', backref= 'User',cascade="all, delete")
-
+    phone = db.Column(db.Text(), nullable = True)
+    secondary_phone = db.Column(db.Text(), nullable = True)
+    secondary_email = db.Column(db.Text(), nullable = True)
+    company = db.Column(db.Text(), nullable = True)
+    address = db.Column(db.Text(), nullable = True)
+    designation = db.Column(db.Text(), nullable = True)
+    country = db.Column(db.Text(), nullable = True)
+    zip = db.Column(db.Text(), nullable = True)
 
     def __repr__(self):
         return "<User %r>" % self.email
@@ -224,13 +215,17 @@ class User(db.Model):
                "email_confirmed_at":self.email_confirmed_at,
                "first_name":self.first_name,
                "last_name":self.last_name,
-               "role":self.roles.serialize()
-        }
+               "role":self.roles.serialize(),
+               "phone": self.phone,
+               "secondary_phone": self.secondary_phone,
+               "secondary_email": self.secondary_email,
+               "company": self.company,
+               "address": self.address,
+               "designation": self.designation,
+               "country": self.country,
+               "zip": self.zip
+            }
     
-
-
-
-
 # create table in database for storing roles
 
 # class Role(db.Model):
@@ -280,13 +275,11 @@ class Enquiry(db.Model):
         return "<Enquiry %r>" % self.name
      
      def serialize(self):
-        return{"id":self.id,
-               "status":self.status,
-               "created_at":self.created_at,
-               "images": self.images,
-              "quote_data":self.quote_data,
-               "user_data":self.user_data,
-               "uuid": self.uuid
-
-            #    "updated_at":self.updated_at
+        return{ "id":self.id,
+                "status":self.status,
+                "created_at":self.created_at,
+                "images": self.images,
+                "quote_data":self.quote_data,
+                "user_data":self.user_data,
+                "uuid": self.uuid
         }
