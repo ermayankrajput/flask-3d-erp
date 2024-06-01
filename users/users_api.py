@@ -5,7 +5,7 @@ from flask import abort, jsonify, make_response, request,Blueprint
 # from flask_login import LoginManager, login_required, logout_user
 import jwt
 # from  werkzeug.security import generate_password_hash, check_password_hash
-from users.auth_middleware import generate_token, token_required, roles_required, ADMIN_ROLE, USER_ROLE, is_current_user, SUPERADMIN_ROLE
+from users.auth_middleware import generate_token, token_required, roles_required, ADMIN_ROLE, USER_ROLE, is_current_user, SUPERADMIN_ROLE, SALES
 from database.database_models import Quote, QuoteInfo, UnitQuote, User,Role,db
 from app import app 
 from sqlalchemy import func
@@ -42,9 +42,14 @@ def sign_up():
     if user:
         # msg="User already exist"
         return jsonify({"Success":"False","Message":"User already exit"}) 
+    req_two = request.get_json()
+    getPassword = req_two.get('password')
+    if getPassword is None:
+        password = generateHashedPassword('dwefcewvj.cvnjefvCVGHVWHCV$$@****123234').decode()
+    else:
+        password = generateHashedPassword(request.json['password']).decode()
     
-    # Hashing the password
-    user = User(email=request.json['email'], status=1, first_name= request.json['first_name'],last_name=request.json['last_name'],email_confirmed_at= str(datetime.now()), password = generateHashedPassword(request.json['password']).decode(),age = request.json['age'],role_id=request.json['role_id'])
+    user = User(email=request.json['email'], status=1, first_name= request.json['first_name'],last_name=request.json['last_name'],secondary_email=request.json['secondary_email'],phone=request.json['phone'],secondary_phone=request.json['secondary_phone'],designation=request.json['designation'],company=request.json['company'],address=request.json['address'],country=request.json['country'],zip=request.json['zip'],email_confirmed_at= str(datetime.now()), password = password,age = request.json['age'],role_id=request.json['role_id'])
     db.session.add(user)
     db.session.commit()
     return jsonify(user.serialize())
@@ -61,6 +66,8 @@ def register_role():
     # db.session.add(role)
     role = Role(id=4, name = 'vendor', status = 1)
     db.session.add(role)
+    role = Role(id=5, name = 'sales', status = 1)
+    db.session.add(role)
     db.session.commit()
     roles = Role.query.all()
     result = [role.serialize() for role in roles]
@@ -70,7 +77,7 @@ def register_role():
 
 
 @user_api_blueprint.route('/user/<int:user_id>', methods = ['GET'])
-@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE)
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES)
 def getUser(current_user,user_id):
     # breakpoint()
     user = User.query.get(user_id)
@@ -91,7 +98,7 @@ def getUserByEmail(email):
 
 
 @user_api_blueprint.route('/user-role/<int:role_id>', methods = ['GET'])
-@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE)
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES)
 def getRole(current_user,role_id):
     user = Role.query.get(role_id)
     if user is None:
@@ -101,7 +108,7 @@ def getRole(current_user,role_id):
  
 
 @user_api_blueprint.route('/user', methods = ['PATCH'])
-@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE)
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES)
 def updateUser(current_user):
     if "id" in request.json and current_user.role_id == ADMIN_ROLE  or current_user.role_id == SUPERADMIN_ROLE:
         user = User.query.get(request.json["id"])
@@ -124,7 +131,7 @@ def updateUser(current_user):
     
 
 @user_api_blueprint.route("/user/<int:user_id>", methods = ["DELETE"])
-@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE)
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES)
 def deleteUser(current_user,user_id):
     if current_user.role_id==ADMIN_ROLE or current_user.id==user_id:
         User.query.filter_by(id=user_id).delete()
@@ -218,15 +225,19 @@ def drop_table_fun():
 #     db.session.commit()
 #     logout_user()
 #     return "Done"
-@user_api_blueprint.route('/get/users', methods=["GET"])
-@roles_required(ADMIN_ROLE,SUPERADMIN_ROLE)
-def getAllUsers(current_user):
-    users = User.query.all()
+@user_api_blueprint.route('/get/users/<role_id>', methods=["GET"])
+@roles_required(ADMIN_ROLE,SUPERADMIN_ROLE,SALES)
+def getAllUsers(current_user,role_id = 0):
+    # breakpoint()
+    if role_id != '0' :
+        users = User.query.filter_by(role_id = role_id).all()
+    else:
+        users = User.query.all()
     result = [user.serialize() for user in users]
     return jsonify(result)
 
 @user_api_blueprint.route('/access', methods=["GET"])
-@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE)
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES)
 def teachers(current_user):
     return jsonify(current_user.serialize())
 
@@ -269,7 +280,7 @@ def shared_user(current_user, email, uuid):
 
 
 @user_api_blueprint.route('/change-password', methods = ["POST"] )
-@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE)
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES)
 def resetPassword(current_user):
     new_password = request.json['new_password']
     if "id" in request.json and current_user.role_id == ADMIN_ROLE:
@@ -285,8 +296,18 @@ def resetPassword(current_user):
         current_user.password =  generateHashedPassword(new_password).decode()
         db.session.commit()
         return jsonify({"success":"True","Message":"Password has been changed successfilly!"})
-    return jsonify({"sucess":"False","Password":"Wrong old password, please try again!"})
+    return jsonify({"success":"False","Password":"Wrong old password, please try again!"})
 
+@user_api_blueprint.route('/add-client-to-quote', methods = ['PATCH'])
+@roles_required(ADMIN_ROLE, SUPERADMIN_ROLE,SALES)
+def addClientToQuote(current_user):
+    user = User.query.get(request.json['user_id'])
+    quote = Quote.query.get(request.json['quote_id'])
+    if not user or not quote:
+        return jsonify({"success":"False","message":"Invalid user or quote"})
+    quote.client_id = user.id
+    db.session.commit()
+    return jsonify({"success":"True","client" : user.serialize()})
 
 
 

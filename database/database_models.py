@@ -40,6 +40,9 @@ class Quote(db.Model):
         quote_infos = []
         if self.quote_infos:
             quote_infos = [quote_infos.serialize() for quote_infos in self.quote_infos]
+        client = {}
+        if self.client_id:
+            client = User.query.get(self.client_id).serialize()
         # if self.versions:
         #     versions = [versions.serialize() for versions in self.versions]
         return {"id": self.id,
@@ -54,6 +57,7 @@ class Quote(db.Model):
                 "quote_infos": quote_infos,
                 "uuid": self.uuid,
                 "user_id": self.user_id,
+                "client": client,
                 "parent_id": self.parent_id, 
                 "versions": len(self.versions),
                 }
@@ -83,6 +87,9 @@ class Quote(db.Model):
         user = {}
         if self.user_id:
             user = User.query.get(self.user_id).serialize()
+        client = {}
+        if self.client_id:
+            client = User.query.get(self.client_id).serialize()
         return {"id": self.id,
                 "name": self.name,
                 "quote_date": self.quote_date,
@@ -96,6 +103,7 @@ class Quote(db.Model):
                 "uuid": self.uuid,
                 "user_id": self.user_id,
                 "user": user,
+                "client": client,
                 "parent_id": self.parent_id, 
                 "versions": versions,
                 }
