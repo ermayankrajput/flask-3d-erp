@@ -32,6 +32,7 @@ class Quote(db.Model):
     quote_infos = db.relationship('QuoteInfo', backref = 'Quote', cascade="all, delete")
     versions = db.relationship('Quote', backref=db.backref('parent', remote_side=[id]))
     client_id = db.Column(db.Integer, nullable = True)
+    is_final = db.Column(db.Integer(), nullable=False, server_default='0')
 
     def __repr__(self):
         return "<Quote %r>" % self.grand_total
@@ -60,6 +61,7 @@ class Quote(db.Model):
                 "client": client,
                 "parent_id": self.parent_id, 
                 "versions": len(self.versions),
+                "is_final": self.is_final,
                 }
     def serializeBasic(self):
         return {"id": self.id,
@@ -76,6 +78,7 @@ class Quote(db.Model):
                 "user_id": self.user_id,
                 "parent_id": self.parent_id, 
                 "versions": len(self.versions),
+                "is_final": self.is_final,
                 }
     def serializeAdvance(self):
         quote_infos = []
@@ -106,6 +109,7 @@ class Quote(db.Model):
                 "client": client,
                 "parent_id": self.parent_id, 
                 "versions": versions,
+                "is_final": self.is_final,
                 }
 
 class QuoteInfo(db.Model):
