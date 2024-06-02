@@ -39,11 +39,20 @@ class Quote(db.Model):
     
     def serialize(self):
         quote_infos = []
+
         if self.quote_infos:
             quote_infos = [quote_infos.serialize() for quote_infos in self.quote_infos]
         client = {}
         if self.client_id:
             client = User.query.get(self.client_id).serialize()
+        
+        is_version_finalized = False
+        if self.versions:
+            versions = Quote.query.filter_by(parent_id = self.id, is_final = 1).all()
+            if versions:
+                is_version_finalized = True
+            
+        
         # if self.versions:
         #     versions = [versions.serialize() for versions in self.versions]
         return {"id": self.id,
@@ -62,8 +71,14 @@ class Quote(db.Model):
                 "parent_id": self.parent_id, 
                 "versions": len(self.versions),
                 "is_final": self.is_final,
+                "is_version_finalized": is_version_finalized
                 }
     def serializeBasic(self):
+        is_version_finalized = False
+        if self.versions:
+            versions = Quote.query.filter_by(parent_id = self.id, is_final = 1).all()
+            if versions:
+                is_version_finalized = True
         return {"id": self.id,
                 "name": self.name,
                 "quote_date": self.quote_date,
@@ -79,6 +94,7 @@ class Quote(db.Model):
                 "parent_id": self.parent_id, 
                 "versions": len(self.versions),
                 "is_final": self.is_final,
+                "is_version_finalized": is_version_finalized
                 }
     def serializeAdvance(self):
         quote_infos = []
@@ -93,6 +109,11 @@ class Quote(db.Model):
         client = {}
         if self.client_id:
             client = User.query.get(self.client_id).serialize()
+        is_version_finalized = False
+        # if self.versions:
+        #     versions = Quote.query.filter_by(parent_id = self.id, is_final = 1).all()
+        #     if versions:
+        #         is_version_finalized = True
         return {"id": self.id,
                 "name": self.name,
                 "quote_date": self.quote_date,
@@ -110,6 +131,7 @@ class Quote(db.Model):
                 "parent_id": self.parent_id, 
                 "versions": versions,
                 "is_final": self.is_final,
+                # "is_version_finalized": is_version_finalized
                 }
 
 class QuoteInfo(db.Model):
