@@ -7,8 +7,8 @@ from datetime import datetime, timedelta
 USER_ROLE = 2
 ADMIN_ROLE = 1
 SUPERADMIN_ROLE = 3
-VENDOR = 4
-SALES = 5
+VENDOR_ROLE = 4
+SALES_ROLE = 5
 
 def token_required(f):
     @wraps(f)

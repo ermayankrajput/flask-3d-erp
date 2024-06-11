@@ -32,6 +32,7 @@ class Quote(db.Model):
     quote_infos = db.relationship('QuoteInfo', backref = 'Quote', cascade="all, delete")
     versions = db.relationship('Quote', backref=db.backref('parent', remote_side=[id]))
     client_id = db.Column(db.Integer, nullable = True)
+    department_id = db.Column(db.Integer, default=1)
     is_final = db.Column(db.Integer(), nullable=False, server_default='0')
 
     def __repr__(self):
@@ -71,7 +72,8 @@ class Quote(db.Model):
                 "parent_id": self.parent_id, 
                 "versions": len(self.versions),
                 "is_final": self.is_final,
-                "is_version_finalized": is_version_finalized
+                "is_version_finalized": is_version_finalized,
+                "department_id":self.department_id,
                 }
     def serializeBasic(self):
         is_version_finalized = False
@@ -94,7 +96,8 @@ class Quote(db.Model):
                 "parent_id": self.parent_id, 
                 "versions": len(self.versions),
                 "is_final": self.is_final,
-                "is_version_finalized": is_version_finalized
+                "department_id":self.department_id,
+                "is_version_finalized": is_version_finalized,
                 }
     def serializeAdvance(self):
         quote_infos = []
@@ -103,6 +106,7 @@ class Quote(db.Model):
         versions = []
         if self.versions:
             versions = [versions.serializeAdvance() for versions in self.versions]
+        # breakpoint()
         user = {}
         if self.user_id:
             user = User.query.get(self.user_id).serialize()
@@ -131,6 +135,7 @@ class Quote(db.Model):
                 "parent_id": self.parent_id, 
                 "versions": versions,
                 "is_final": self.is_final,
+                "department_id":self.department_id,
                 # "is_version_finalized": is_version_finalized
                 }
 
@@ -316,4 +321,22 @@ class Enquiry(db.Model):
                 "quote_data":self.quote_data,
                 "user_data":self.user_data,
                 "uuid": self.uuid
+        }
+
+class Department(db.Model):
+     __tablename__ = 'departments'
+     id = db.Column(db.Integer(), primary_key=True)
+     name = db.Column(db.String(50), unique=True)
+     status = db.Column(db.Integer(), nullable=False, server_default='1')
+     created_at = db.Column(db.DateTime(timezone=True), default=func.now())
+     updated_at = db.Column(db.DateTime(timezone=True), default=func.now())
+     
+
+     def __repr__(self):
+        return "<Department %r>" % self.name
+     
+     def serialize(self):
+        return{ "id":self.id,
+                "name":self.name,
+                "status":self.status,
         }

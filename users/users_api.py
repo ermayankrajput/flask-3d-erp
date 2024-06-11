@@ -5,7 +5,7 @@ from flask import abort, jsonify, make_response, request,Blueprint
 # from flask_login import LoginManager, login_required, logout_user
 import jwt
 # from  werkzeug.security import generate_password_hash, check_password_hash
-from users.auth_middleware import generate_token, token_required, roles_required, ADMIN_ROLE, USER_ROLE, is_current_user, SUPERADMIN_ROLE, SALES
+from users.auth_middleware import generate_token, token_required, roles_required, ADMIN_ROLE, USER_ROLE, is_current_user, SUPERADMIN_ROLE, SALES_ROLE,VENDOR_ROLE
 from database.database_models import Quote, QuoteInfo, UnitQuote, User,Role,db
 from app import app 
 from sqlalchemy import func
@@ -17,6 +17,7 @@ import sqlalchemy
 
 from alembic.migration import MigrationContext
 from alembic.operations import Operations
+from quote.quote_api import SALES_DEPARTMENT,ENGINEERING_DEPARTMENT,PRODUCTION_DEPARTMENT
 
 user_api_blueprint = Blueprint('user_api_blueprint', __name__)
 
@@ -77,7 +78,7 @@ def register_role():
 
 
 @user_api_blueprint.route('/user/<int:user_id>', methods = ['GET'])
-@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES)
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES_ROLE,VENDOR_ROLE)
 def getUser(current_user,user_id):
     # breakpoint()
     user = User.query.get(user_id)
@@ -98,7 +99,7 @@ def getUserByEmail(email):
 
 
 @user_api_blueprint.route('/user-role/<int:role_id>', methods = ['GET'])
-@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES)
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES_ROLE)
 def getRole(current_user,role_id):
     user = Role.query.get(role_id)
     if user is None:
@@ -108,7 +109,7 @@ def getRole(current_user,role_id):
  
 
 @user_api_blueprint.route('/user', methods = ['PATCH'])
-@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES)
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES_ROLE,VENDOR_ROLE)
 def updateUser(current_user):
     if "id" in request.json and current_user.role_id == ADMIN_ROLE  or current_user.role_id == SUPERADMIN_ROLE:
         user = User.query.get(request.json["id"])
@@ -131,7 +132,7 @@ def updateUser(current_user):
     
 
 @user_api_blueprint.route("/user/<int:user_id>", methods = ["DELETE"])
-@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES)
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES_ROLE)
 def deleteUser(current_user,user_id):
     if current_user.role_id==ADMIN_ROLE or current_user.id==user_id:
         User.query.filter_by(id=user_id).delete()
@@ -226,7 +227,7 @@ def drop_table_fun():
 #     logout_user()
 #     return "Done"
 @user_api_blueprint.route('/get/users/<role_id>', methods=["GET"])
-@roles_required(ADMIN_ROLE,SUPERADMIN_ROLE,SALES)
+@roles_required(ADMIN_ROLE,SUPERADMIN_ROLE,SALES_ROLE)
 def getAllUsers(current_user,role_id = 0):
     # breakpoint()
     if role_id != '0' :
@@ -237,7 +238,7 @@ def getAllUsers(current_user,role_id = 0):
     return jsonify(result)
 
 @user_api_blueprint.route('/access', methods=["GET"])
-@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES)
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES_ROLE)
 def teachers(current_user):
     return jsonify(current_user.serialize())
 
@@ -263,7 +264,7 @@ def shared_user(current_user, email, uuid):
     quote = Quote.query.filter_by(parent_id = old_quote.id, user_id = current_user.id).first()
     if quote:
         return jsonify({'user' : current_user.serialize(),'token' : token, 'quote': quote.serialize()})
-    quote = Quote(quote_date = str(datetime.now()), validity = old_quote.validity, shipping_cost = old_quote.shipping_cost, grand_total = None, attachments = old_quote.attachments, user_id = current_user.id, parent_id = old_quote.id, customer_name = old_quote.customer_name, customer_company = old_quote.customer_company, customer_address = old_quote.customer_address, customer_email = old_quote.customer_email, customer_designation = old_quote.customer_designation, customer_phone = old_quote.customer_phone)
+    quote = Quote(quote_date = str(datetime.now()), validity = old_quote.validity, shipping_cost = old_quote.shipping_cost, grand_total = None, attachments = old_quote.attachments, user_id = current_user.id, parent_id = old_quote.id, client_id=old_quote.client_id, department_id = ENGINEERING_DEPARTMENT)
     db.session.add(quote)
     db.session.commit()
     old_quoteinfos = QuoteInfo.query.filter_by(quote_id = old_quote.id)
@@ -280,7 +281,7 @@ def shared_user(current_user, email, uuid):
 
 
 @user_api_blueprint.route('/change-password', methods = ["POST"] )
-@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES)
+@roles_required(ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE,SALES_ROLE)
 def resetPassword(current_user):
     new_password = request.json['new_password']
     if "id" in request.json and current_user.role_id == ADMIN_ROLE:
@@ -299,7 +300,7 @@ def resetPassword(current_user):
     return jsonify({"success":"False","Password":"Wrong old password, please try again!"})
 
 @user_api_blueprint.route('/add-client-to-quote', methods = ['PATCH'])
-@roles_required(ADMIN_ROLE, SUPERADMIN_ROLE,SALES)
+@roles_required(ADMIN_ROLE, SUPERADMIN_ROLE,SALES_ROLE)
 def addClientToQuote(current_user):
     user = User.query.get(request.json['user_id'])
     quote = Quote.query.get(request.json['quote_id'])

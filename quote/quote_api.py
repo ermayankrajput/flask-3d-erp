@@ -3,7 +3,7 @@ from flask import Blueprint, Response, abort, request,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime,date
 from sqlalchemy import func
-from users.auth_middleware import ADMIN_ROLE, USER_ROLE, roles_required,SUPERADMIN_ROLE,VENDOR, SALES
+from users.auth_middleware import ADMIN_ROLE, USER_ROLE, roles_required,SUPERADMIN_ROLE,VENDOR_ROLE, SALES_ROLE
 from database.database_models import Quote, QuoteInfo, UnitQuote, Enquiry
 from app import db
 import multiprocessing
@@ -20,6 +20,9 @@ import json
 # from werkzeug.utils import secure_filename
 import zipfile
 from app import app 
+SALES_DEPARTMENT = 1
+ENGINEERING_DEPARTMENT = 2
+PRODUCTION_DEPARTMENT = 3
 
 
 quote_api_blueprint = Blueprint('quote_api_blueprint', __name__)
@@ -59,7 +62,7 @@ def upload3dFile():
     return jsonify({"Success":True, "file_name":file.filename, "uploded_file":fileServerPath, "transported_file":transported_file, "image_file": fileServerPath+'.jpg', "x":str(queueInfo[0]), "y":str(queueInfo[1]), "z":str(queueInfo[2])})
 
 @quote_api_blueprint.route('/create-quote', methods = ['GET'])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES_ROLE)
 def createUniqueQuote(current_user):
     quote = get_or_create_quote(int(request.form.get('quote-id') or '0'), current_user)
     return jsonify({'success':True,'quote':quote.serialize()})
@@ -150,12 +153,12 @@ def createUnitQuote(quote_info_id):
 
 
 @quote_api_blueprint.route('/unit-quote', methods = ['PATCH'])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE, VENDOR,SALES)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE, VENDOR_ROLE,SALES_ROLE)
 def updateUnitQuote(current_user):
     unit_quote = UnitQuote.query.get(request.json["id"])
     if unit_quote is None:
         abort(404)
-    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES:
+    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES_ROLE:
         db.session.query(UnitQuote).filter_by(id=unit_quote.id).update(request.json)
         db.session.commit()
         return jsonify(unit_quote.serialize())
@@ -181,12 +184,12 @@ def updateUnitQuote(current_user):
 
 
 @quote_api_blueprint.route('/quote-info', methods = ['PATCH'])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES_ROLE)
 def updateQuoteInfo(current_user):
     quote_info = QuoteInfo.query.get(request.json["id"])
     if quote_info is None:
         abort(404)
-    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES:
+    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES_ROLE:
         db.session.query(QuoteInfo).filter_by(id=quote_info.id).update(request.json)
         db.session.commit()
         return jsonify(quote_info.serialize())
@@ -211,12 +214,12 @@ def updateQuoteInfo(current_user):
 
 
 @quote_api_blueprint.route('/quote', methods = ['PATCH'])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES_ROLE)
 def updateQuote(current_user): 
     quote = Quote.query.get(request.json["id"])
     if quote is None:
         abort(404)
-    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES:
+    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES_ROLE:
         db.session.query(Quote).filter_by(id=quote.id).update(request.json)
         db.session.commit()
         return jsonify({"quote":quote.serializeBasic()})
@@ -239,12 +242,12 @@ def updateQuote(current_user):
 # }
 
 @quote_api_blueprint.route("/unit-quote", methods = ["DELETE"])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES_ROLE)
 def deleteUnitQuote(current_user):
     unit_quote = UnitQuote.query.get(request.json["id"])
     if unit_quote is None:
         abort(404)
-    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES:
+    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES_ROLE:
         UnitQuote.query.filter_by(id=unit_quote.id).delete()
         db.session.commit()
         return jsonify({"success":True, "response": "Unit Quote deleted","id":unit_quote.id})
@@ -270,12 +273,12 @@ def deleteUnitQuote(current_user):
 # }
 
 @quote_api_blueprint.route("/quote-info", methods = ["DELETE"])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES_ROLE)
 def deleteQuoteInfo(current_user):
     quote_info = QuoteInfo.query.get(request.json["id"])
     if quote_info is None:
         abort(404)
-    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES:
+    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES_ROLE:
         QuoteInfo.query.filter_by(id=quote_info.id).delete()
         db.session.commit()
         return jsonify({"success":True, "response": "Quote Info deleted","id":quote_info.id})
@@ -298,12 +301,12 @@ def deleteQuoteInfo(current_user):
 # "id":9
 # }
 @quote_api_blueprint.route("/quote", methods = ["DELETE"])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES_ROLE)
 def deleteQuote(current_user):
     quote = Quote.query.get(request.json["id"])
     if quote is None:
         abort(404)
-    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES:
+    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES_ROLE:
         Quote.query.filter_by(id=quote.id).delete()
         db.session.commit()
         return jsonify({"success":True, "response": "Quote deleted","id":quote.id})
@@ -321,9 +324,9 @@ def deleteQuote(current_user):
 
 
 @quote_api_blueprint.route('/unit-quote/<int:unit_quote_id>', methods = ['GET'])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES_ROLE)
 def getUnitQuote(current_user,unit_quote_id):
-    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES:
+    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES_ROLE:
         unit_quote = UnitQuote.query.all()
         result = [unit_quote.serializeBasic() for unit_quote in unit_quote]
         return jsonify({"unit_quote" :result})
@@ -342,9 +345,9 @@ def getUnitQuote(current_user,unit_quote_id):
 # need quote-info id to get quote in url..
 
 @quote_api_blueprint.route('/quote-info/<int:quote_info_id>', methods = ['GET'])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES_ROLE)
 def getQuoteInfo(current_user,quote_info_id):
-    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES:
+    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES_ROLE:
         quote_info = QuoteInfo.query.all()
         result = [quote_info.serializeBasic() for quote_info in quote_info]
         return jsonify({"quote_info" :result})
@@ -366,24 +369,24 @@ def getQuoteInfo(current_user,quote_info_id):
 # need quote id to get quote in url.. ex: /quote/19
 
 @quote_api_blueprint.route('/quote/<int:quote_id>', methods = ['GET'])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE, VENDOR,SALES)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE, VENDOR_ROLE,SALES_ROLE)
 def getQuote(current_user,quote_id):
     quote = Quote.query.get(quote_id)
     # breakpoint()
     if quote is None:
         abort(404)
-    if quote.user_id == current_user.id or current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES:
+    if quote.user_id == current_user.id or current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES_ROLE:
         return jsonify({"success":True,"quote":quote.serialize()})
     return jsonify({"success":False,"quote":"Not Found"})
 
 @quote_api_blueprint.route('/quote-versions/<int:quote_id>', methods = ['GET'])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES_ROLE)
 def getQuoteVersions(current_user,quote_id):
     quote = Quote.query.get(quote_id)
     # breakpoint()
     if quote is None:
         abort(404)
-    if quote.user_id == current_user.id or current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES:
+    if quote.user_id == current_user.id or current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES_ROLE:
         return jsonify({"success":True,"quote":quote.serializeAdvance()})
     return jsonify({"success":False,"quote":"Not Found"})
 
@@ -391,18 +394,26 @@ def getQuoteVersions(current_user,quote_id):
 # Endpoint belong to Get all quote
 
 @quote_api_blueprint.route('/quotes', methods = ['GET'])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE, SUPERADMIN_ROLE, VENDOR, SALES)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE, VENDOR_ROLE, SALES_ROLE)
 def getAllQuotes(current_user):
-    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES:
-        quotes = Quote.query.filter_by(parent_id = None).all()
+    if current_user.role_id == ADMIN_ROLE or current_user.role_id == SUPERADMIN_ROLE or current_user.role_id == SALES_ROLE:
+        department_id = [SALES_DEPARTMENT] if current_user.role_id == SALES_ROLE else [ENGINEERING_DEPARTMENT] if current_user.role_id == ADMIN_ROLE else [SALES_DEPARTMENT,ENGINEERING_DEPARTMENT]
+        quotes = Quote.query.filter_by(parent_id = None).filter(Quote.department_id.in_(department_id)).all()
+        # breakpoint()
         result = [quote.serializeBasic() for quote in quotes]
         return jsonify(result)
+
+        # select * from users where role_id in ([1,2,3])
+    # if current_user.role_id == SALES_ROLE:
+    #     quotes = Quote.query.filter_by(department_id = 1).all()
+    #     result = [quote.serializeBasic() for quote in quotes]
+    #     return jsonify(result)
     quotes = Quote.query.filter_by(user_id = current_user.id)
     result = [quote.serialize() for quote in quotes]
     return jsonify(result)
 
 @quote_api_blueprint.route('/unit-quotes', methods = ['GET'])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES_ROLE)
 def getAllUnitQuote():
     unit_quotes = UnitQuote.query.all()
     result = [unit_quotes.serialize() for unit_quotes in unit_quotes]
@@ -410,7 +421,7 @@ def getAllUnitQuote():
 
 
 @quote_api_blueprint.route('/quote-infos', methods = ['GET'])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES_ROLE)
 def getAllQuoteInfo():
     quote_infos = QuoteInfo.query.all()
     result = [quote_infos.serialize() for quote_infos in quote_infos]
@@ -420,7 +431,7 @@ def getAllQuoteInfo():
 # query to get quote by date..
 # Quote by date(single day) by get parameters ex. /quotes-by-date/?date=2023-06-22
 @quote_api_blueprint.route('/quotes-by-date', methods = ['GET'])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES_ROLE)
 def getAllQuoteByDate():
     quotes = Quote.query.filter(func.date(Quote.quote_date)==request.args.get('date') ).all()
     result = [quote.serialize() for quote in quotes]
@@ -429,7 +440,7 @@ def getAllQuoteByDate():
 
 
 @quote_api_blueprint.route('/quotes-between-date', methods = ['GET'])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE, USER_ROLE,SALES_ROLE)
 def getAllQuoteBetweenDate():
     quotes = Quote.query.filter(func.date(Quote.quote_date).between(request.args.get('date'),request.args.get('end'))).all()
     result = [quote.serialize() for quote in quotes]
@@ -592,7 +603,7 @@ app.config['EXTRACTED_FOLDER'] = EXTRACTED_FOLDER
 #         return jsonify(quote.serialize())
 
 @quote_api_blueprint.route('/quote-upload', methods=['POST'])
-@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE,SALES)
+@roles_required(SUPERADMIN_ROLE, ADMIN_ROLE,SALES_ROLE)
 def upload_any(current_user):
     non3dFiles = []
     non3dFilenames = []
