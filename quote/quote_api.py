@@ -20,6 +20,9 @@ import json
 # from werkzeug.utils import secure_filename
 import zipfile
 from app import app 
+from s3_upload import downloadFile
+import shutil
+
 SALES_DEPARTMENT = 1
 ENGINEERING_DEPARTMENT = 2
 PRODUCTION_DEPARTMENT = 3
@@ -767,3 +770,20 @@ def deleteEnquiry():
         return jsonify({"success":True, "response": "Unit Quote deleted","id":enquiry.id})
 
    
+@quote_api_blueprint.route('/download-all-files/<int:quote_id>', methods=['GET'])
+def downloadAllFiles(quote_id):
+    quote_infos = QuoteInfo.query.filter_by(quote_id = quote_id).all()
+    path = 'downloads/'+str(quote_id)
+    downloadPath = 'downloads/3ERP-quote-'+str(quote_id)
+    if not os.path.exists(path):
+        os.makedirs(path)
+    for quote_info in quote_infos:
+        downloadFile(quote_info.uploded_file,path)
+
+    quote = Quote.query.get(quote_id)
+    attachments = json.loads(quote.attachments)
+    for attachment in attachments:
+        downloadFile(attachment['file'],path)
+        # breakpoint()
+    shutil.make_archive(downloadPath, 'zip', path)
+    return jsonify({"success":True, "path": downloadPath+'.zip'})

@@ -26,7 +26,7 @@ from flask_seeder import FlaskSeeder
 # from mesh_converter import meshRun
 
 # app = Flask(__name__, static_folder='transported')
-app = Flask(__name__, static_folder='temp-uploads')
+app = Flask(__name__, static_folder='downloads')
 CORS(app)
 app.url_map.strict_slashes = False
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:password@localhost:5432/db3erp"
