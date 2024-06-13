@@ -18,10 +18,10 @@ import trimesh
 from flask_cors import CORS
 from flask_seeder import FlaskSeeder
 
-# from OpenSSL import SSL
-# context = SSL.Context(SSL.TLSv1_2_METHOD)
-# context.use_privatekey_file('key.pem')
-# context.use_certificate_file('cert.pem')
+from OpenSSL import SSL
+context = SSL.Context(SSL.TLSv1_2_METHOD)
+context.use_privatekey_file('key.pem')
+context.use_certificate_file('cert.pem')
 
 # from mesh_converter import meshRun
 
@@ -29,7 +29,8 @@ from flask_seeder import FlaskSeeder
 app = Flask(__name__, static_folder='downloads')
 CORS(app)
 app.url_map.strict_slashes = False
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:password@localhost:5432/db3erp"
+# app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:password@localhost:5432/db3erp"
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = '128566299290685828278054891499021371965'
 db = SQLAlchemy(app)
