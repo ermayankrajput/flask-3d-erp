@@ -340,3 +340,19 @@ class Department(db.Model):
                 "name":self.name,
                 "status":self.status,
         }
+
+class Exchange(db.Model):
+     __tablename__ = 'exchange_rate'
+     id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
+     rate = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
+     created_at = db.Column(db.DateTime(timezone=True), default=func.now())
+     
+
+     def __repr__(self):
+        return "<Exchange %r>" % self.rate
+     
+     def serialize(self):
+        return{ "id":self.id,
+                "rate":self.rate,
+                "created_at":self.created_at,
+        }

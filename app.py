@@ -66,6 +66,9 @@ app.register_blueprint(quote_api_blueprint)
 from users.users_api import user_api_blueprint
 app.register_blueprint(user_api_blueprint)
 
+from exchange.exchange_api import exchange_api_blueprint
+app.register_blueprint(exchange_api_blueprint)
+
 @app.route('/testm',methods=['GET', 'POST'])
 def test():
     file = request.files["file"]

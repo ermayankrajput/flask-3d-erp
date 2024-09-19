@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime,date
 from sqlalchemy import func
 from users.auth_middleware import ADMIN_ROLE, USER_ROLE, roles_required,SUPERADMIN_ROLE,VENDOR_ROLE, SALES_ROLE
-from database.database_models import Quote, QuoteInfo, UnitQuote, Enquiry
+from database.database_models import Quote, QuoteInfo, UnitQuote, Enquiry, Exchange
 from app import db
 import multiprocessing
 from multiprocessing import Pool
@@ -717,7 +717,9 @@ def get_or_create_quote(quoteId, user):
     if quoteId:
         quote = Quote.query.get(quoteId)
     if not quoteId and quote is None:
-        quote = Quote(quote_date = str(datetime.now()), validity = None, shipping_cost = None, grand_total = None, attachments = "[]",user_id=user.id,name = "quote")
+        exchange_rate = Exchange.query.order_by(Exchange.created_at.desc()).first()
+        # breakpoint()
+        quote = Quote(quote_date = str(datetime.now()), validity = 30, usd_to_rmb = exchange_rate.rate, shipping_cost = None, grand_total = None, attachments = "[]",user_id=user.id,name = "quote")
         db.session.add(quote)
         db.session.commit()
     return quote
