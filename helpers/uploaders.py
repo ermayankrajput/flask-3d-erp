@@ -1,4 +1,4 @@
-from s3_upload import s3_upload
+from s3_upload import s3_upload, s3_delete
 import os
 
 def uploadToS3(filePath):
@@ -9,6 +9,9 @@ def uploadToS3(filePath):
     # emptyUploadFolder()
     return
 
+def deleteFromS3(filePath):
+    s3_delete(filePath)
+    return True
 
 def emptyUploadFolder():
     for f in os.listdir('uploads'):

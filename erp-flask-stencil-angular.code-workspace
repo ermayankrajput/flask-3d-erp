@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../erp-stencil"
+		},
+		{
+			"path": "../Threejs-modals"
+		}
+	],
+	"settings": {}
+}

@@ -14,7 +14,7 @@ import os
 import time
 from dimension import stlToImg
 from helpers.helper_function import  filter_files_by_extension, isStl, allowed_file, iszip, unique_fileName, unique_fileName_with_path
-from helpers.uploaders import uploadFileToS3, uploadToS3
+from helpers.uploaders import uploadFileToS3, uploadToS3, deleteFromS3
 # from transfers.transfer_function import cadex_Converter
 import json
 # from werkzeug.utils import secure_filename
@@ -700,14 +700,16 @@ def handleZipFile(file, filename, quote):
 def stencilUpload():
     file = request.files.get('file')
     if 'file' not in request.files:
-        print("there is no file a")
+        # print("there is no file a")
         return jsonify({'error': 'No file available'})
     file = request.files['file']
     if not os.path.exists('temp-uploads'):
         os.makedirs('temp-uploads')
     uniqueFileName = unique_fileName(file.filename)
     file.save(f"temp-uploads/{uniqueFileName}")
-    fileServerPath = '/temp-uploads/' + uniqueFileName
+    fileServerPath = 'temp-uploads/' + uniqueFileName
+    uploadProcess = multiprocessing.Process(target=uploadFileToS3, args=([fileServerPath],))
+    uploadProcess.start()
     return jsonify(fileServerPath)
     
 
@@ -741,6 +743,7 @@ def deleteUploads():
     if not 'path' in jsonP:
         return jsonify({"success" : False, "path" : jsonP.get('path') , "message":"File not deleted successfully"})
     os.remove(os.path.join(jsonP.get('path') ))
+    # deleteFromS3(jsonP.get('path'))
     return jsonify({"success" : True, "path" : jsonP.get('path') , "message":"File deleted successfully"})
 
 
@@ -771,7 +774,6 @@ def deleteEnquiry():
         db.session.commit()
         return jsonify({"success":True, "response": "Unit Quote deleted","id":enquiry.id})
 
-   
 @quote_api_blueprint.route('/download-all-files/<int:quote_id>', methods=['GET'])
 def downloadAllFiles(quote_id):
     quote_infos = QuoteInfo.query.filter_by(quote_id = quote_id).all()

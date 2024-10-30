@@ -8,6 +8,12 @@ def s3_upload(filePath, newFileName):
         s3.Bucket(bucketName).upload_fileobj(data,  newFileName)
     return newFileName
 
+def s3_delete(filePath):
+    s3 = boto3.client("s3", aws_access_key_id="AKIAVJYKM3CKTXR2RUTW", aws_secret_access_key= "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")
+    bucketName = "elasticbeanstalk-ap-northeast-1-364557162645"
+    s3.delete_object(Bucket=bucketName, Key=filePath)
+    return filePath
+
 def downloadFile(filePath,path):
     # s3 = boto3.resource("s3", aws_access_key_id="AKIAVJYKM3CKTXR2RUTW", aws_secret_access_key= "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")
     # bucketName = "elasticbeanstalk-ap-northeast-1-364557162645"
