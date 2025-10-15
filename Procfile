@@ -1,1 +1,1 @@
-web: gunicorn flask-3d-erp:app
+web: gunicorn app:app
