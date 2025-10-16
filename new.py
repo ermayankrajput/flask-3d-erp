@@ -10,6 +10,7 @@ def save_stl_image(queue,fileServerPath):
     # Load STL file
     # ret = queue.get()
     pv.start_xvfb()
+    pv.global_theme.off_screen = True
     mesh = pv.read(fileServerPath)
 
     # Get object dimensions using bounding box

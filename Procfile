@@ -1,1 +1,1 @@
-web: xvfb-run -a gunicorn app:app
+web: xvfb-run -a python app.py
