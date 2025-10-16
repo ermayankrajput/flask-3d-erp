@@ -9,31 +9,35 @@ def handle_stl_file(queue,fileServerPath):
     # ret = queue.get()
     # pv.OFF_SCREEN = True
     # pv.global_theme.off_screen = True
-    pv.start_xvfb()
+    # pv.start_xvfb()
+    # Enable offscreen rendering
     pv.global_theme.off_screen = True
+
+    # Load STL
     mesh = pv.read(fileServerPath)
 
-    # Get object dimensions using bounding box
+    # Compute object dimensions
     bounds = mesh.bounds
     length = bounds[1] - bounds[0]
     width = bounds[3] - bounds[2]
     height = bounds[5] - bounds[4]
-    # print(f"Object dimensions (length, width, height): {length}, {width}, {height}")
 
-
-    # Render the mesh
-    plotter = pv.Plotter(off_screen=True)
+    # Setup plotter for offscreen rendering
+    plotter = pv.Plotter(off_screen=True, window_size=(250, 250))
     plotter.add_mesh(mesh, color='cyan', line_width=1, edge_color='r')
     plotter.hide_axes()
 
-    plotter.window_size = (250, 250)
-
-    # Save image
-    plotter.screenshot(fileServerPath + ".jpg")
+    # Save screenshot
+    output_file = fileServerPath + ".jpg"
+    plotter.screenshot(output_file)
     plotter.close()
-    # ret['sucess'] = True
-    queue.put((length,width,height))
-    result = queue.get()
+
+    # Send dimensions back via queue
+    queue.put((length, width, height))
+
+    # Optionally retrieve result immediately (if needed)
+    # result = queue.get()
+    # return result
 
     # return (length,width,height)
 # Example usage
