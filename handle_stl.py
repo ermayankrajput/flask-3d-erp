@@ -7,8 +7,9 @@ import pyvista as pv
 def handle_stl_file(queue,fileServerPath):
     # Load STL file
     # ret = queue.get()
+    pv.OFF_SCREEN = True
     pv.global_theme.off_screen = True
-    pv.start_xvfb()
+    # pv.start_xvfb()
     mesh = pv.read(fileServerPath)
 
     # Get object dimensions using bounding box
