@@ -1,3 +1,7 @@
+import os
+os.environ["PYVISTA_OFF_SCREEN"] = "true"
+os.environ["PYVISTA_USE_MESA"] = "true"
+os.environ["VTK_DEFAULT_RENDER_WINDOW_OFFSCREEN"] = "true"
 import pyvista as pv
 
 fileServerPath = "dragon.stl"
@@ -5,6 +9,7 @@ output_file = 'object_image4.jpg'
 def save_stl_image(queue,fileServerPath):
     # Load STL file
     # ret = queue.get()
+    pv.start_xvfb()
     mesh = pv.read(fileServerPath)
 
     # Get object dimensions using bounding box
