@@ -1,8 +1,9 @@
 import os
-os.environ["PYVISTA_OFF_SCREEN"] = "true"
+# Force PyVista to use OSMesa for offscreen rendering
 os.environ["PYVISTA_USE_OSMESA"] = "true"
-os.environ["VTK_DEFAULT_RENDER_WINDOW_OFFSCREEN"] = "true"
+os.environ["PYVISTA_OFF_SCREEN"] = "true"
 import pyvista as pv
+import numpy as np
 
 def handle_stl_file(queue,fileServerPath):
     # Load STL file
@@ -11,28 +12,25 @@ def handle_stl_file(queue,fileServerPath):
     # pv.global_theme.off_screen = True
     # pv.start_xvfb()
     # Enable offscreen rendering
-    pv.global_theme.off_screen = True
-
-    # Load STL
     mesh = pv.read(fileServerPath)
 
-    # Compute object dimensions
+    # Compute bounding box dimensions
     bounds = mesh.bounds
     length = bounds[1] - bounds[0]
-    width = bounds[3] - bounds[2]
+    width  = bounds[3] - bounds[2]
     height = bounds[5] - bounds[4]
 
-    # Setup plotter for offscreen rendering
+    # Offscreen rendering with OSMesa
     plotter = pv.Plotter(off_screen=True, window_size=(250, 250))
     plotter.add_mesh(mesh, color='cyan', line_width=1, edge_color='r')
     plotter.hide_axes()
 
-    # Save screenshot
-    output_file = fileServerPath + ".jpg"
-    plotter.screenshot(output_file)
+    # Screenshot
+    screenshot_path = f"{fileServerPath}.jpg"
+    plotter.screenshot(screenshot_path)
     plotter.close()
 
-    # Send dimensions back via queue
+    # Return dimensions via queue
     queue.put((length, width, height))
 
     # Optionally retrieve result immediately (if needed)
