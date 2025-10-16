@@ -30,7 +30,12 @@ app = Flask(__name__, static_folder='downloads')
 CORS(app)
 app.url_map.strict_slashes = False
 # app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:password@localhost:5432/db3erp"
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+db_url = os.environ.get("DATABASE_URL")
+# 🔧 Fix the old-style Postgres URI
+if db_url and db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = '128566299290685828278054891499021371965'
 db = SQLAlchemy(app)
