@@ -1,1 +1,1 @@
-web: xvfb-run -a gunicorn main:app
+web: xvfb-run -a gunicorn app:app
