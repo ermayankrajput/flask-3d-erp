@@ -10,6 +10,7 @@ def handle_stl_file(queue,fileServerPath):
     # pv.OFF_SCREEN = True
     # pv.global_theme.off_screen = True
     pv.start_xvfb()
+    pv.global_theme.off_screen = True
     mesh = pv.read(fileServerPath)
 
     # Get object dimensions using bounding box
