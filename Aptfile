@@ -1,7 +1,5 @@
 xvfb
 libgl1
-libglib2.0-0
-libnotify4
-libgl1-mesa-glx
 libosmesa6
 libglu1-mesa
+libx11-6

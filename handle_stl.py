@@ -1,6 +1,6 @@
 import os
 os.environ["PYVISTA_OFF_SCREEN"] = "true"
-os.environ["PYVISTA_USE_OSMESA"] = "true"  # force OSMesa software rendering
+os.environ["PYVISTA_USE_OSMESA"] = "true"
 os.environ["VTK_DEFAULT_RENDER_WINDOW_OFFSCREEN"] = "true"
 import pyvista as pv
 
