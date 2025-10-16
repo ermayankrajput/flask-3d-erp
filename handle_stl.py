@@ -7,6 +7,7 @@ import pyvista as pv
 def handle_stl_file(queue,fileServerPath):
     # Load STL file
     # ret = queue.get()
+    pv.global_theme.off_screen = True
     pv.start_xvfb()
     mesh = pv.read(fileServerPath)
 
