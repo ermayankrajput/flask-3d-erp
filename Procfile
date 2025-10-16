@@ -1,1 +1,1 @@
-web: xvfb-run --auto-servernum --server-args="-screen 0 1024x768x16" gunicorn app:app
+web: xvfb-run -a gunicorn main:app
