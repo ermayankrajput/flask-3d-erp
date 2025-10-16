@@ -30,8 +30,7 @@ app = Flask(__name__, static_folder='downloads')
 CORS(app)
 app.url_map.strict_slashes = False
 # app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:password@localhost:5432/db3erp"
-# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://jbrkskqumr:dgb6zYrmBz@159.65.150.109:3306/jbrkskqumr"
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = '128566299290685828278054891499021371965'
 db = SQLAlchemy(app)
