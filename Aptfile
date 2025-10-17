@@ -1,4 +1,6 @@
-libgl1
+libgl1-mesa-glx
 libglib2.0-0
-xvfb
 mesa-utils
+xvfb
+x11-xkb-utils
+xkb-data

@@ -18,10 +18,18 @@ import trimesh
 from flask_cors import CORS
 # from flask_seeder import FlaskSeeder
 os.environ["PYVISTA_OFF_SCREEN"] = "true"
+os.environ["PYVISTA_USE_MESA"] = "true"
 os.environ["LIBGL_ALWAYS_SOFTWARE"] = "1"
 os.environ["MESA_GL_VERSION_OVERRIDE"] = "3.3"
 os.environ["MESA_GLSL_VERSION_OVERRIDE"] = "330"
+
 import pyvista as pv
+
+try:
+    pv.start_xvfb()
+    print("✅ Xvfb started successfully inside app.py")
+except Exception as e:
+    print("⚠️ Xvfb startup issue:", e)
 
 # from OpenSSL import SSL
 # context = SSL.Context(SSL.TLSv1_2_METHOD)
