@@ -1,3 +1,4 @@
 xvfb
-libosmesa6-dev
-libglu1-mesa-dev
+mesa-utils
+libgl1
+libglib2.0-0

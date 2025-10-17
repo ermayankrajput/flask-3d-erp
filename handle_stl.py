@@ -1,7 +1,7 @@
 import os
 # Force PyVista to use OSMesa for offscreen rendering
-os.environ["PYVISTA_USE_OSMESA"] = "true"
 os.environ["PYVISTA_OFF_SCREEN"] = "true"
+os.environ["PYVISTA_USE_MESA"] = "true"
 import pyvista as pv
 import numpy as np
 
@@ -12,6 +12,7 @@ def handle_stl_file(queue,fileServerPath):
     # pv.global_theme.off_screen = True
     # pv.start_xvfb()
     # Enable offscreen rendering
+    pv.global_theme.off_screen = True
     mesh = pv.read(fileServerPath)
 
     # Compute bounding box dimensions
