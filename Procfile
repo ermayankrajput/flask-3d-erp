@@ -1,1 +1,1 @@
-web: xvfb-run -a -s "-screen 0 1024x768x24 +extension GLX +render" gunicorn app:app
+web: gunicorn app:app
