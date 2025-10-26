@@ -39,5 +39,5 @@ def handle_stl_file(queue, fileServerPath):
         plotter.screenshot(screenshot_path)
     finally:
         plotter.close()
-
+    print(length, width, height)
     queue.put((length, width, height))
