@@ -652,6 +652,7 @@ def handle3dFiles(file, filename, quote):
         p.join()
         queueInfo = queue.get() if not queue.empty() else (0, 0, 0)
         # unpack tuple safely
+        print(queueInfo, queue.get())
         x, y, z = queueInfo if isinstance(queueInfo, (list, tuple)) else (0, 0, 0)
         # breakpoint()
         file_data_list = {
