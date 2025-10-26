@@ -652,9 +652,9 @@ def handle3dFiles(file, filename, quote):
         p.join()
         queueInfo2 = queue.get()
         # unpack tuple safely
-        x = queueInfo2["x"]
-        y = queueInfo2["y"]
-        z = queueInfo2["z"]
+        x = queueInfo2.get("x", 0)
+        y = queueInfo2.get("y", 0)
+        z = queueInfo2.get("z", 0)
         print('queueInfo2: ', queueInfo2, 'queue.get("x")', queue.get('x'))
         print('hbvh', queueInfo2.get("x"))
         # breakpoint()
