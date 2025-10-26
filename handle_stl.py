@@ -40,4 +40,4 @@ def handle_stl_file(queue, fileServerPath):
     finally:
         plotter.close()
     print(length, width, height)
-    queue.put((length, width, height))
+    queue.put({"x": length, "y": width, "z": height})
