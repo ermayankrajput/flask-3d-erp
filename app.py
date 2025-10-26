@@ -23,13 +23,13 @@ os.environ["LIBGL_ALWAYS_SOFTWARE"] = "1"
 os.environ["MESA_GL_VERSION_OVERRIDE"] = "3.3"
 os.environ["MESA_GLSL_VERSION_OVERRIDE"] = "330"
 
-import pyvista as pv
+# import pyvista as pv
 
-try:
-    pv.start_xvfb()
-    print("✅ Xvfb started successfully inside app.py")
-except Exception as e:
-    print("⚠️ Xvfb startup issue:", e)
+# try:
+#     pv.start_xvfb()
+#     print("✅ Xvfb started successfully inside app.py")
+# except Exception as e:
+#     print("⚠️ Xvfb startup issue:", e)
 
 # from OpenSSL import SSL
 # context = SSL.Context(SSL.TLSv1_2_METHOD)
@@ -37,8 +37,8 @@ except Exception as e:
 # context.use_certificate_file('cert.pem')
 
 # from mesh_converter import meshRun
-pv.global_theme.off_screen = True
-pv.start_xvfb() 
+# pv.global_theme.off_screen = True
+# pv.start_xvfb() 
 
 # app = Flask(__name__, static_folder='transported')
 app = Flask(__name__, static_folder='downloads')

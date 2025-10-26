@@ -10,8 +10,8 @@ def handle_stl_file(queue, fileServerPath):
     os.environ["MESA_GLSL_VERSION_OVERRIDE"] = "330"
     os.environ["DISPLAY"] = ""
 
-    pv.OFF_SCREEN = True
-    pv.global_theme.off_screen = True
+    # pv.OFF_SCREEN = True
+    # pv.global_theme.off_screen = True
 
     # Optional: start virtual framebuffer (safe if already running)
     try:
