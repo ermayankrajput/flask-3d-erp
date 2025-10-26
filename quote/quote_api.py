@@ -651,6 +651,8 @@ def handle3dFiles(file, filename, quote):
         p.start()
         p.join()
         queueInfo  = queue.get()
+        if not queueInfo:
+            queueInfo = [0, 0, 0]
         # breakpoint()
         file_data_list = {
           "file_name": filename,
