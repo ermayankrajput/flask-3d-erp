@@ -650,19 +650,18 @@ def handle3dFiles(file, filename, quote):
         p = multiprocessing.Process(target=handle_stl_file, args=(queue,file))
         p.start()
         p.join()
-        queueInfo = queue.get() if not queue.empty() else (0, 0, 0)
+        queueInfo2 = queue.get() if not queue.empty() else (0, 0, 0)
         # unpack tuple safely
-        print('queueInfo: ', queueInfo, 'queue.get()', queue.get())
-        x, y, z = queueInfo if isinstance(queueInfo, (list, tuple)) else (0, 0, 0)
+        print('queueInfo2: ', queueInfo2, 'queue.get()', queue.get())
         # breakpoint()
         file_data_list = {
             "file_name": filename,
             "uploded_file": file,
             "transported": file,
             "image": file + '.jpg',
-            "x": x,
-            "y": y,
-            "z": z,
+            "x": queueInfo2[0],
+            "y": queueInfo2[1],
+            "z": queueInfo2[2],
         }
         # handle_stl_files(file)
         # breakpoint()
