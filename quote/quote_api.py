@@ -659,9 +659,9 @@ def handle3dFiles(file, filename, quote):
           "uploded_file" : file,
           "transported": file,
           "image": file + '.jpg',
-          "x":queueInfo[0] if len(queueInfo) > 0 else 0,
-          "y":queueInfo[1] if len(queueInfo) > 0 else 0,
-          "z":queueInfo[2] if len(queueInfo) > 0 else 0,
+          "x": queueInfo.get("x", 0),
+          "y": queueInfo.get("y", 0),
+          "z": queueInfo.get("z", 0),
         }
         # handle_stl_files(file)
         # breakpoint()
