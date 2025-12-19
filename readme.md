@@ -10,6 +10,7 @@
 * 8. nohup :- 
 * 9. Run XVFB for screen:- Xvfb :99 -screen 0 1024x768x16 &
 * 10. export DISPLAY=:99
-
+  11. nohup Xvfb :99 -screen 0 1024x768x16 > xvfb.log 2>&1 &
+  12. nohup env DISPLAY=:99 gunicorn --bind=0.0.0.0:5000 app:app > gunicorn.log 2>&1 &
 
 
